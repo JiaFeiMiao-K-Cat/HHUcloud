@@ -2,12 +2,10 @@
 
 namespace EMO_Cloud.Models
 {
-    public class Artist
+    public class Converter
     {
         [Key]
         public long Id { get; set; }
-
-        public string Name { get; set; }
-        public List<Converter> SongList { get; set; }
+        public long Value { get; set; }
     }
 }

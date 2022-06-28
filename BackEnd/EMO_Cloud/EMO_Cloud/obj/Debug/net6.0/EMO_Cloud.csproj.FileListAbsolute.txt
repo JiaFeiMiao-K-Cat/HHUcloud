@@ -1,4 +1,3 @@
-D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.csproj.AssemblyReference.cache
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.GeneratedMSBuildEditorConfig.editorconfig
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.AssemblyInfoInputs.cache
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.AssemblyInfo.cs
@@ -283,3 +282,6 @@ D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.dll
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\ref\EMO_Cloud.dll
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.pdb
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.genruntimeconfig.cache
+D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\System.Net.Http.Formatting.dll
+D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\System.Web.Http.dll
+D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\Swashbuckle.Core.dll
