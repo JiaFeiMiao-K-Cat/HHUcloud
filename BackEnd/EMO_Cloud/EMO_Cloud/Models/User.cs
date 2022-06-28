@@ -1,4 +1,6 @@
-﻿namespace EMO_Cloud.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EMO_Cloud.Models
 {
     public class User
     {
