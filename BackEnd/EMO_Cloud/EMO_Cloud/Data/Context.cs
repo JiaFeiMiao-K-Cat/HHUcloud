@@ -21,7 +21,7 @@ namespace EMO_Cloud.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>().ToTable("USERS");
+            modelBuilder.Entity<User>().HasAlternateKey(b => b.Email);
             modelBuilder.Entity<Song>().ToTable("SONG");
             modelBuilder.Entity<Artist>().ToTable("ARTIST");
             modelBuilder.Entity<PlayList>().ToTable("PLAYLIST");

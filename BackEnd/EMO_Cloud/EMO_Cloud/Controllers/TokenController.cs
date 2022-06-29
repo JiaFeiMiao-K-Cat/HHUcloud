@@ -12,6 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using EMO_Cloud.Tools;
+using System.Text.Json.Nodes;
 
 namespace EMO_Cloud.Controllers
 {
@@ -30,43 +31,56 @@ namespace EMO_Cloud.Controllers
 
         // POST: api/Token
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// POST: api/Token
+        /// 获取Token
+        /// </summary>
+        /// <param name="obj">包含"email"和"password"字段的JSON对象</param>
+        /// <returns>若成功响应201并返回Token, 若失败响应400</returns>
         [HttpPost]
-        public async Task<IActionResult> PostUser(User user)
+        public async Task<IActionResult> PostUser(JsonObject obj)
         {
-            if (user != null && user.Email != null && user.Password != null)
+            if (obj == null)
             {
-                string password = user.Password + _configuration["Jwt:Salt"];
+                return BadRequest();
+            }
+            string email = obj["email"].ToString();
+            string password = obj["password"].ToString();
+            if ((!string.IsNullOrWhiteSpace(email)) && (!string.IsNullOrWhiteSpace(password)))
+            {
+                password = MyTools.ComputeSHA256Hash(password + _configuration["Jwt:Salt"]); // 加盐并哈希
 
-                var findedUser = await GetUser(user.Name, MyTools.ComputeSHA256Hash(password));
+                var user = await GetUser(email, password);
 
-                if (findedUser != null)
+                if (user != null)
                 {
                     string role = "Guest";
-                    if ((Role.Root | findedUser.Role) > 0)
+                    if ((Role.Root | user.Role) > 0)
                     {
                         role = Role.Root.ToString();
                     }
                     else
                     {
-                        if ((Role.Administrator | findedUser.Role) > 0)
+                        if ((Role.Administrator | user.Role) > 0)
                         {
                             role = Role.Administrator.ToString();
                         }
                         else
                         {
-                            if ((Role.User | findedUser.Role) > 0)
+                            if ((Role.User | user.Role) > 0)
                             {
                                 role = Role.User.ToString();
                             }
                         }
-                    }
+                    } // 设置用户权限
+
                     //create claims details based on the user information
                     var claims = new[] {
                         new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                        new Claim("UserId", findedUser.Id.ToString()),
-                        new Claim("UserName", findedUser.Name),
+                        new Claim("UserId", user.Id.ToString()),
+                        new Claim("UserName", user.Name),
                         new Claim(ClaimTypes.Role, role)
                     };
 
@@ -91,10 +105,15 @@ namespace EMO_Cloud.Controllers
                 return BadRequest();
             }
         }
-
-        private async Task<User> GetUser(string name, string password)
+        /// <summary>
+        /// 根据邮箱和密码查找用户
+        /// </summary>
+        /// <param name="email">用户邮箱地址</param>
+        /// <param name="password">加盐哈希后的用户密码</param>
+        /// <returns>查找结果, 用户不存在为null</returns>
+        private async Task<User> GetUser(string email, string password)
         {
-            return await _context.User.FirstOrDefaultAsync(u => u.Name == name && u.Password == password);
+            return await _context.User.FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
         }
     }
 }

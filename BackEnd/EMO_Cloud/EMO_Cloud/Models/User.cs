@@ -9,6 +9,7 @@ namespace EMO_Cloud.Models
         Administrator = 2,
         Root = 4
     }
+    [Table("USERS")]
     public class User
     {
         [Key]
