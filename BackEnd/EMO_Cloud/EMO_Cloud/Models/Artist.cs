@@ -8,6 +8,6 @@ namespace EMO_Cloud.Models
         public long Id { get; set; }
 
         public string Name { get; set; }
-        public List<Converter> SongList { get; set; }
+        public virtual List<Converter> SongList { get; set; }
     }
 }

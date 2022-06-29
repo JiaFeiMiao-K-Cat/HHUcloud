@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EMO_Cloud</name>
+    </assembly>
+    <members>
+        <member name="M:EMO_Cloud.Controllers.TokenController.PostUser(System.Text.Json.Nodes.JsonObject)">
+            <summary>
+            获取Token
+            </summary>
+            <remarks>
+            POST: api/Token
+            </remarks>
+            <param name="obj">包含"email"和"password"字段的JSON对象</param>
+            <returns>若成功响应201并返回Token, 若失败响应400</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.TokenController.GetUser(System.String,System.String)">
+            <summary>
+            根据邮箱和密码查找用户
+            </summary>
+            <param name="email">用户邮箱地址</param>
+            <param name="password">加盐哈希后的用户密码</param>
+            <returns>查找结果, 用户不存在为null</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.GetUser">
+            <summary>
+            获取所有用户信息
+            </summary>
+            <remarks>
+            GET: api/Users
+            
+            需要提供Token, 管理员及以上用户可用
+            </remarks>
+            <returns>若成功响应201并返回所有用户信息; 若失败响应404(数据库表为空), 400(授权失败)</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.GetUser(System.Int64)">
+            <summary>
+            获取指定id用户信息
+            </summary>
+            <remarks>
+            GET: api/Users/5
+            
+            需要提供Token, 管理员及以上用户可用
+            </remarks>
+            <returns>若成功响应201并返回所有用户信息; 若失败响应404(数据库表为空), 400(授权失败)</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.Login">
+            <summary>
+            用户登录
+            </summary>
+            <remarks>
+            POST: api/Users/login
+            
+            需要提供Token
+            </remarks>
+            <returns>若成功响应201并返回用户信息(隐去密码和安全码), 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.Regist(EMO_Cloud.Models.User)">
+            <summary>
+            用户注册
+            </summary>
+            <remarks>
+            POST: api/Users/Regist
+            
+            JSON形式传输, 不需要的属性应置空, 不能缺失
+            
+            需要(加\*为必须填写): Age, Email(\*), Name(\*), Password(\*), ProfilePhoto
+            
+            可选: securityKey 复用以确定注册用户权限
+            </remarks>
+            <param name="user">用户信息</param>
+            <returns>若成功响应201并返回用户信息; 若失败返回500(JSON格式错误), 400(邮箱已存在/数据库表为空)</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.UserExists(System.String)">
+            <summary>
+            该邮箱地址的用户是否存在
+            </summary>
+            <param name="email">邮箱地址</param>
+            <returns>用户是否存在</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.GetUserId">
+            <summary>
+            copy from: https://stackoverflow.com/questions/50580232/get-userid-from-jwt-on-all-controller-methods
+            </summary>
+            <returns>当前Token的用户ID</returns>
+        </member>
+    </members>
+</doc>

@@ -23,7 +23,7 @@ namespace EMO_Cloud.Models
         public string Password { get; set; }
         public string SecurityKey { get; set; }
         public int ProfilePhoto { get; set; }
-        public List<Converter> PlayLists { get; set; }
-        public List<PlayRecord> HistoryPlay { get; set; }
+        public virtual List<Converter> PlayLists { get; set; }
+        public virtual List<PlayRecord> HistoryPlay { get; set; }
     }
 }

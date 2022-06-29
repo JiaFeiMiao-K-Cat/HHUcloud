@@ -9,6 +9,6 @@ namespace EMO_Cloud.Models
 
         public int ListTitle { get; set; }
         public long UserId { get; set; }
-        public List<Converter> SongList { get; set; }
+        public virtual List<Converter> SongList { get; set; }
     }
 }

@@ -29,12 +29,12 @@ namespace EMO_Cloud.Controllers
             _context = context;
         }
 
-        // POST: api/Token
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         /// <summary>
-        /// POST: api/Token
         /// 获取Token
         /// </summary>
+        /// <remarks>
+        /// POST: api/Token
+        /// </remarks>
         /// <param name="obj">包含"email"和"password"字段的JSON对象</param>
         /// <returns>若成功响应201并返回Token, 若失败响应400</returns>
         [HttpPost]

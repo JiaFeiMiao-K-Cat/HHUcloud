@@ -29,10 +29,13 @@ namespace EMO_Cloud.Controllers
         }
 
         /// <summary>
-        /// GET: api/Users
-        /// 返回所有用户信息
-        /// 需要提供Token, 管理员及以上用户可用
+        /// 获取所有用户信息
         /// </summary>
+        /// <remarks>
+        /// GET: api/Users
+        /// 
+        /// 需要提供Token, 管理员及以上用户可用
+        /// </remarks>
         /// <returns>若成功响应201并返回所有用户信息; 若失败响应404(数据库表为空), 400(授权失败)</returns>
         [HttpGet]
         [Authorize(Roles = "Root,Administrator")]
@@ -46,10 +49,13 @@ namespace EMO_Cloud.Controllers
         }
 
         /// <summary>
-        /// GET: api/Users/5
-        /// 返回指定id用户信息
-        /// 需要提供Token, 管理员及以上用户可用
+        /// 获取指定id用户信息
         /// </summary>
+        /// <remarks>
+        /// GET: api/Users/5
+        /// 
+        /// 需要提供Token, 管理员及以上用户可用
+        /// </remarks>
         /// <returns>若成功响应201并返回所有用户信息; 若失败响应404(数据库表为空), 400(授权失败)</returns>
         [HttpGet("{id}")]
         [Authorize(Roles = "Root,Administrator")]
@@ -70,9 +76,13 @@ namespace EMO_Cloud.Controllers
         }
 
         /// <summary>
-        /// POST: api/Users/login
-        /// 需要提供Token
+        /// 用户登录
         /// </summary>
+        /// <remarks>
+        /// POST: api/Users/login
+        /// 
+        /// 需要提供Token
+        /// </remarks>
         /// <returns>若成功响应201并返回用户信息(隐去密码和安全码), 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
         [HttpPost]
         [Authorize(Roles = "Root,Administrator,User")]
@@ -99,11 +109,17 @@ namespace EMO_Cloud.Controllers
         }
 
         /// <summary>
-        /// POST: api/Users/Regist
-        /// 用户注册, JSON形式传输, 不需要的属性应置空, 不能缺失
-        /// 需要(加*为必须填写): Age, Email(*), Name(*), Password(*), ProfilePhoto
-        /// 可选: securityKey 复用以确定注册用户权限
+        /// 用户注册
         /// </summary>
+        /// <remarks>
+        /// POST: api/Users/Regist
+        /// 
+        /// JSON形式传输, 不需要的属性应置空, 不能缺失
+        /// 
+        /// 需要(加\*为必须填写): Age, Email(\*), Name(\*), Password(\*), ProfilePhoto
+        /// 
+        /// 可选: securityKey 复用以确定注册用户权限
+        /// </remarks>
         /// <param name="user">用户信息</param>
         /// <returns>若成功响应201并返回用户信息; 若失败返回500(JSON格式错误), 400(邮箱已存在/数据库表为空)</returns>
         [HttpPost]
