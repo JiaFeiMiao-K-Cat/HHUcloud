@@ -285,7 +285,7 @@ D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.genruntimecon
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\System.Net.Http.Formatting.dll
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\System.Web.Http.dll
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\Swashbuckle.Core.dll
-D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.csproj.AssemblyReference.cache
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\EMOcloud.xml
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\Castle.Core.dll
 D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Proxies.dll
+D:\HHUcloud\BackEnd\EMO_Cloud\EMO_Cloud\obj\Debug\net6.0\EMO_Cloud.csproj.AssemblyReference.cache

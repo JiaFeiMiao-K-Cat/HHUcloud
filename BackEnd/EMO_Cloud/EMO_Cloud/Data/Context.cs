@@ -17,7 +17,12 @@ namespace EMO_Cloud.Data
         public DbSet<User>? User { get; set; }
         public DbSet<Song>? Song { get; set; }
         public DbSet<Artist>? Artist { get; set; }
+        public DbSet<Album>? Album { get; set; }
         public DbSet<PlayList>? PlayList { get; set; }
+        public DbSet<PlayRecord>? PlayRecord { get; set; }
+        public DbSet<ArtistHasSongs>? ArtistHasSongs { get; set; }
+        public DbSet<AlbumHasSongs>? AlbumHasSongs { get; set; }
+        public DbSet<PlayListHasSongs>? PlayListHasSongs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +30,10 @@ namespace EMO_Cloud.Data
             modelBuilder.Entity<Song>().ToTable("SONG");
             modelBuilder.Entity<Artist>().ToTable("ARTIST");
             modelBuilder.Entity<PlayList>().ToTable("PLAYLIST");
+            modelBuilder.Entity<PlayRecord>().ToTable("PLAYRECORD");
+            modelBuilder.Entity<AlbumHasSongs>().ToTable("ALBUMHASSONGS");
+            modelBuilder.Entity<ArtistHasSongs>().ToTable("ARTISTHASSONGS");
+            modelBuilder.Entity<PlayListHasSongs>().ToTable("PLAYLISTHASSONGS");
         }
     }
 }

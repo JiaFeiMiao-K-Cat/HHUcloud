@@ -13,6 +13,7 @@ namespace EMO_Cloud.Models
 
         [NotMapped]
         public List<long>? ArtistId { get; set; }
+
         public string Duration { get; set; }
         public long AlbumId { get; set; }
         public string ImgLink { get; set; }

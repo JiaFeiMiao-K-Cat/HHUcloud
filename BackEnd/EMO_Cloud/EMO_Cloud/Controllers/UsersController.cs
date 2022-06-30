@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using EMO_Cloud.Tools;
 using Swashbuckle.Swagger.Annotations;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace EMO_Cloud.Controllers
 {
@@ -76,23 +78,64 @@ namespace EMO_Cloud.Controllers
         }
 
         /// <summary>
-        /// 用户登录
+        /// 获取用户信息
         /// </summary>
         /// <remarks>
-        /// POST: api/Users/login
+        /// POST: api/Users/Info
         /// 
         /// 需要提供Token
         /// </remarks>
         /// <returns>若成功响应201并返回用户信息(隐去密码和安全码), 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
-        [HttpPost]
+        [HttpPost("Info")]
         [Authorize(Roles = "Root,Administrator,User")]
-        [Route("Login")]
-        public async Task<ActionResult<User>> Login()
+        public async Task<ActionResult<User>> Info()
         {
             if (_context.User == null)
             {
                 return Problem("Entity set 'Context.User'  is null.");
             }
+            long id = GetUserId();
+
+            User _user = await _context.User.FindAsync(id);
+
+            if (_user == null)
+            {
+                return NotFound();
+            }
+
+            User user = JsonSerializer.Deserialize<User>(JsonSerializer.Serialize(_user)); //Deep Copy
+
+            user.Password = string.Empty; // hide information
+            user.SecurityKey = string.Empty; // hide information
+
+            user.PlayLists = _context.PlayList?
+                .Where(e => e.UserId == user.Id).Select(p => p.Id).ToList();
+
+            user.HistoryPlay = _context.PlayRecord?
+                .Where(e => e.UserId == user.Id).OrderBy(p => p.LastTime).ToList();
+            // sort by Last time
+
+            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+        }
+
+        /// <summary>
+        /// 获取用户歌单列表
+        /// </summary>
+        /// <remarks>
+        /// POST: api/Users/PlayList
+        /// 
+        /// 需要提供Token
+        /// </remarks>
+        /// <returns>若成功响应201并返回用户歌单列表, 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
+        [HttpPost("PlayList")]
+        [Authorize(Roles = "Root,Administrator,User")]
+        public async Task<ActionResult<List<Tuple<string, long>>>> PlayList()
+        {
+            if (_context.User == null)
+            {
+                return Problem("Entity set 'Context.User'  is null.");
+            }
+
             long id = GetUserId();
 
             User user = await _context.User.FindAsync(id);
@@ -102,10 +145,19 @@ namespace EMO_Cloud.Controllers
                 return NotFound();
             }
 
-            user.Password = string.Empty; // hide information
-            user.SecurityKey = string.Empty; // hide information
+            if (!_context.PlayList.Any(e => e.UserId == user.Id))
+            {
+                PlayList playlist = new PlayList();
+                playlist.Id = 0;
+                playlist.ListTitle = "我的收藏";
+                playlist.UserId = user.Id;
+                _context.PlayList.Add(playlist);
+                _context.SaveChanges();
+            }
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            return _context.PlayList?
+                .Where(e => e.UserId == user.Id)
+                .Select(p => new Tuple<string, long>(p.ListTitle, p.Id)).ToList();
         }
 
         /// <summary>
@@ -114,35 +166,40 @@ namespace EMO_Cloud.Controllers
         /// <remarks>
         /// POST: api/Users/Regist
         /// 
-        /// JSON形式传输, 不需要的属性应置空, 不能缺失
+        /// FormData形式传参
         /// 
-        /// 需要(加\*为必须填写): Age, Email(\*), Name(\*), Password(\*), ProfilePhoto
+        /// 可选: securityKey 用于确定注册用户权限
         /// 
-        /// 可选: securityKey 复用以确定注册用户权限
+        /// 若成功将响应201并返回用户信息; 若失败返回500(格式错误), 400(邮箱已存在/数据库表为空)
+        /// 
         /// </remarks>
-        /// <param name="user">用户信息</param>
-        /// <returns>若成功响应201并返回用户信息; 若失败返回500(JSON格式错误), 400(邮箱已存在/数据库表为空)</returns>
-        [HttpPost]
+        /// <param name="email">邮箱地址</param>
+        /// <param name="name">用户名</param>
+        /// <param name="password">密码</param>
+        /// <param name="securityKey">安全代码</param>
+        /// <returns>若成功将响应201并返回用户信息; 若失败返回500(格式错误), 400(邮箱已存在/数据库表为空)</returns>
+        [HttpPost("Regist")]
         [AllowAnonymous]
-        [Route("Regist")]
-        public async Task<ActionResult<User>> Regist(User user)
+        public async Task<ActionResult<User>> Regist([FromForm] string email, [FromForm] string name, [FromForm] string password, [FromForm] string? securityKey)
         {
             if (_context.User == null)
             {
                 return Problem("Entity set 'Context.User'  is null.");
             }
 
-            if (UserExists(user.Email))
+            if (UserExists(email))
             {
                 return Problem("User is already exists.");
             }
-            if (!string.IsNullOrEmpty(user.SecurityKey))
+
+            User user = new User();
+            if (!string.IsNullOrEmpty(securityKey))
             {
-                if (user.SecurityKey == _configuration["RootCode"])
+                if (securityKey == _configuration["RootCode"])
                 {
                     user.Role = Role.Root;
                 }
-                else if (user.SecurityKey == _configuration["Jwt:Administrator"])
+                else if (securityKey == _configuration["Jwt:Administrator"])
                 {
                     user.Role = Role.Administrator;
                 }
@@ -155,9 +212,9 @@ namespace EMO_Cloud.Controllers
             {
                 user.Role = Role.User;
             }
-
-            //user.Id = await _context.User.MaxAsync(e => e.Id) + 1;
-            user.Password = MyTools.ComputeSHA256Hash(user.Password + _configuration["Jwt:Salt"]);
+            user.Email = email;
+            user.Name = name;
+            user.Password = MyTools.ComputeSHA256Hash(password + _configuration["Jwt:Salt"]);
             user.CreatedDate = DateTime.Now.ToString();
             user.SecurityKey = MyTools.ComputeSHA256Hash(user.CreatedDate + _configuration["Jwt:Salt"]);
             
@@ -166,6 +223,146 @@ namespace EMO_Cloud.Controllers
 
             return CreatedAtAction("GetUser", new { id = user.Id }, user);
         }
+
+        /// <summary>
+        /// 找回密码
+        /// </summary>
+        /// <remarks>
+        /// POST: api/Users/FindBackPassword
+        /// 
+        /// FormData形式传输
+        /// 
+        /// 若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
+        /// 
+        /// </remarks>
+        /// <param name="email">邮箱地址</param>
+        /// <param name="newPassword">新密码</param>
+        /// <param name="securityKey">安全代码</param>
+        [HttpPost("FindBackPassword")]
+        [AllowAnonymous]
+        public async Task<ActionResult<User>> FindBackPassword([FromForm] string email, [FromForm] string newPassword, [FromForm] string securityKey)
+        {
+            if (_context.User == null)
+            {
+                return Problem("Entity set 'Context.User'  is null.");
+            }
+
+            if (!UserExists(email))
+            {
+                return NotFound();
+            }
+            var _user = await _context.User.FirstOrDefaultAsync(e => e.Email == email);
+
+            if (_user.SecurityKey == securityKey)
+            {
+                _user.Password = MyTools.ComputeSHA256Hash(newPassword + _configuration["Jwt:Salt"]);
+                //_context.User.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                return Problem("SecurityKey is wrong.");
+            }
+            User user = JsonSerializer.Deserialize<User>(JsonSerializer.Serialize(_user)); //Deep Copy
+
+            user.Password = string.Empty; // hide information
+            user.SecurityKey = string.Empty; // hide information
+
+            return user;
+        }
+
+        /// <summary>
+        /// 修改密码
+        /// </summary>
+        /// <remarks>
+        /// POST: api/Users/ChangePassword
+        /// 
+        /// FormData形式传输
+        /// 
+        /// 若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
+        /// 
+        /// </remarks>
+        /// <param name="email">邮箱地址</param>
+        /// <param name="oldPassword">原始密码</param>
+        /// <param name="newPassword">新密码</param>
+        [HttpPost("ChangePassword")]
+        public async Task<ActionResult<User>> ChangePassword([FromForm] string oldPassword, [FromForm] string newPassword)
+        {
+            if (_context.User == null)
+            {
+                return Problem("Entity set 'Context.User'  is null.");
+            }
+
+            long id = GetUserId();
+
+            if ((!_context.User?.Any(e => e.Id == id)).GetValueOrDefault())
+            {
+                return NotFound();
+            }
+            var _user = await _context.User.FirstOrDefaultAsync(e => e.Id == id);
+
+            if (_user.Password == MyTools.ComputeSHA256Hash(oldPassword + _configuration["Jwt:Salt"]))
+            {
+                _user.Password = MyTools.ComputeSHA256Hash(newPassword + _configuration["Jwt:Salt"]);
+                //_context.User.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                return Problem("SecurityKey is wrong.");
+            }
+            User user = JsonSerializer.Deserialize<User>(JsonSerializer.Serialize(_user)); //Deep Copy
+
+            user.Password = string.Empty; // hide information
+            user.SecurityKey = string.Empty; // hide information
+
+            return user;
+        }
+
+        /// <summary>
+        /// 修改用户名
+        /// </summary>
+        /// <remarks>
+        /// POST: api/Users/ChangeUserName
+        /// 
+        /// FormData形式传输
+        /// 
+        /// 若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
+        /// 
+        /// </remarks>
+        /// <param name="newName">新用户名</param>
+        [HttpPost("ChangeUserName")]
+        public async Task<ActionResult<User>> ChangePassword([FromForm] string newName)
+        {
+            if (_context.User == null)
+            {
+                return Problem("Entity set 'Context.User'  is null.");
+            }
+
+            long id = GetUserId();
+
+            if ((!_context.User?.Any(e => e.Id == id)).GetValueOrDefault())
+            {
+                return NotFound();
+            }
+
+            if (string.IsNullOrEmpty(newName))
+            {
+                return BadRequest("Illegal parameter");
+            }
+
+            var _user = await _context.User.FirstOrDefaultAsync(e => e.Id == id);
+            _user.Name = newName;
+            //_context.User.Add(user);
+            await _context.SaveChangesAsync();
+            User user = JsonSerializer.Deserialize<User>(JsonSerializer.Serialize(_user)); //Deep Copy
+
+            user.Password = string.Empty; // hide information
+            user.SecurityKey = string.Empty; // hide information
+
+            return user;
+        }
+
         /// <summary>
         /// 该邮箱地址的用户是否存在
         /// </summary>

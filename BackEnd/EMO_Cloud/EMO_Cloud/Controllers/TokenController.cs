@@ -38,14 +38,8 @@ namespace EMO_Cloud.Controllers
         /// <param name="obj">包含"email"和"password"字段的JSON对象</param>
         /// <returns>若成功响应201并返回Token, 若失败响应400</returns>
         [HttpPost]
-        public async Task<IActionResult> PostUser(JsonObject obj)
+        public async Task<IActionResult> PostUser([FromForm] string email, [FromForm] string password)
         {
-            if (obj == null)
-            {
-                return BadRequest();
-            }
-            string email = obj["email"].ToString();
-            string password = obj["password"].ToString();
             if ((!string.IsNullOrWhiteSpace(email)) && (!string.IsNullOrWhiteSpace(password)))
             {
                 password = MyTools.ComputeSHA256Hash(password + _configuration["Jwt:Salt"]); // 加盐并哈希

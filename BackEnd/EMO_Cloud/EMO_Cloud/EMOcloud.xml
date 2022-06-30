@@ -4,6 +4,52 @@
         <name>EMO_Cloud</name>
     </assembly>
     <members>
+        <member name="M:EMO_Cloud.Controllers.PlayListsController.GetUserId">
+            <summary>
+            copy from: https://stackoverflow.com/questions/50580232/get-userid-from-jwt-on-all-controller-methods
+            </summary>
+            <returns>当前Token的用户ID</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.SongsController.Top(System.Int32)">
+            <summary>
+            点击量最高的歌曲列表
+            </summary>
+            <remarks>
+            GET: api/Songs/Top/5
+            </remarks>
+            <param name="size">列表长度</param>
+            <returns>歌曲列表, 长度超过曲库大小时只返回曲库</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.SongsController.Artists(System.Int64)">
+            <summary>
+            指定ID的歌曲的歌手列表
+            </summary>
+            <remarks>
+            GET: api/Songs/Artists/5
+            </remarks>
+            <param name="songId">歌曲ID</param>
+            <returns>歌手</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.SongsController.PostSong(EMO_Cloud.Models.Song)">
+            <summary>
+            添加歌曲
+            </summary>
+            <param name="song"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.SongsController.Search(System.String)">
+            <summary>
+            搜索歌曲
+            </summary>
+            <param name="pattern"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.SongsController.GetUserId">
+            <summary>
+            copy from: https://stackoverflow.com/questions/50580232/get-userid-from-jwt-on-all-controller-methods
+            </summary>
+            <returns>当前Token的用户ID</returns>
+        </member>
         <member name="M:EMO_Cloud.Controllers.TokenController.PostUser(System.Text.Json.Nodes.JsonObject)">
             <summary>
             获取Token
@@ -44,16 +90,27 @@
             </remarks>
             <returns>若成功响应201并返回所有用户信息; 若失败响应404(数据库表为空), 400(授权失败)</returns>
         </member>
-        <member name="M:EMO_Cloud.Controllers.UsersController.Login">
+        <member name="M:EMO_Cloud.Controllers.UsersController.Info">
             <summary>
-            用户登录
+            获取用户信息
             </summary>
             <remarks>
-            POST: api/Users/login
+            POST: api/Users/Info
             
             需要提供Token
             </remarks>
             <returns>若成功响应201并返回用户信息(隐去密码和安全码), 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.PlayList">
+            <summary>
+            获取用户歌单列表
+            </summary>
+            <remarks>
+            POST: api/Users/PlayList
+            
+            需要提供Token
+            </remarks>
+            <returns>若成功响应201并返回用户歌单列表, 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
         </member>
         <member name="M:EMO_Cloud.Controllers.UsersController.Regist(EMO_Cloud.Models.User)">
             <summary>
@@ -70,6 +127,24 @@
             </remarks>
             <param name="user">用户信息</param>
             <returns>若成功响应201并返回用户信息; 若失败返回500(JSON格式错误), 400(邮箱已存在/数据库表为空)</returns>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.ChangePassword(System.Text.Json.Nodes.JsonObject)">
+            <summary>
+            找回密码
+            </summary>
+            <remarks>
+            POST: api/Users/ChangePassword
+            
+            JSON形式传输
+            
+            email: 邮箱地址
+            
+            securityKey: 安全码
+            
+            newPassword: 新密码
+            </remarks>
+            <param name="obj">包含"email", "securityKey"和"newPassword"字段的JSON对象</param>
+            <returns>若成功响应201并返回用户信息; 若失败返回500(JSON格式错误), 400(安全码错误), 404(用户不存在)</returns>
         </member>
         <member name="M:EMO_Cloud.Controllers.UsersController.UserExists(System.String)">
             <summary>

@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<Context>(options =>
-    options.UseLazyLoadingProxies() // ясЁы╪сть
-        .UseSqlite(builder.Configuration.GetConnectionString("Context") ?? throw new InvalidOperationException("Connection string 'UserContext' not found.")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("Context") ?? 
+        throw new InvalidOperationException("Connection string 'UserContext' not found.")));
 
 // Add services to the container.
 
@@ -31,7 +31,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.CustomOperationIds(e => $"{e.ActionDescriptor.RouteValues["action"]}");
-    c.IncludeXmlComments("EMOcloud.xml", true);
+    c.IncludeXmlComments("obj/EMOcloud.xml", true);
     c.OrderActionsBy(o => o.RelativePath);
 });
 
