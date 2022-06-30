@@ -6,8 +6,12 @@ namespace EMO_Cloud.Models
     {
         [Key]
         public int Id { get; set; }
-        public long Song { get; set; }
-        public DateTime Time { get; set; }
+
+        public long UserId { get; set; }
+        public long SongId { get; set; }
+        public DateTime LastTime { get; set; }
+
+        public long Count { get; set; }
 
     }
 }

@@ -3,14 +3,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EMO_Cloud.Models
 {
-    public class Album
+    public class PlayListHasSongs
     {
         [Key]
         public long Id { get; set; }
 
-        public string Name { get; set; }
-
-        [NotMapped]
-        public List<long>? SongList { get; set; }
+        public long PlaylistId { get; set; }
+        public long SongId { get; set; }
     }
 }
