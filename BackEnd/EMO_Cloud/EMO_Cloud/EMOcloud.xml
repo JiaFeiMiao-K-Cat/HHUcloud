@@ -20,12 +20,12 @@
             <param name="size">列表长度</param>
             <returns>歌曲列表, 长度超过曲库大小时只返回曲库</returns>
         </member>
-        <member name="M:EMO_Cloud.Controllers.SongsController.Artists(System.Int64)">
+        <member name="M:EMO_Cloud.Controllers.SongsController.Artist(System.Int64)">
             <summary>
             指定ID的歌曲的歌手列表
             </summary>
             <remarks>
-            GET: api/Songs/Artists/5
+            GET: api/Songs/Artist/5
             </remarks>
             <param name="songId">歌曲ID</param>
             <returns>歌手</returns>
@@ -50,7 +50,7 @@
             </summary>
             <returns>当前Token的用户ID</returns>
         </member>
-        <member name="M:EMO_Cloud.Controllers.TokenController.PostUser(System.Text.Json.Nodes.JsonObject)">
+        <member name="M:EMO_Cloud.Controllers.TokenController.PostUser(System.String,System.String)">
             <summary>
             获取Token
             </summary>
@@ -112,39 +112,71 @@
             </remarks>
             <returns>若成功响应201并返回用户歌单列表, 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
         </member>
-        <member name="M:EMO_Cloud.Controllers.UsersController.Regist(EMO_Cloud.Models.User)">
+        <member name="M:EMO_Cloud.Controllers.UsersController.Regist(System.String,System.String,System.String,System.String)">
             <summary>
             用户注册
             </summary>
             <remarks>
             POST: api/Users/Regist
             
-            JSON形式传输, 不需要的属性应置空, 不能缺失
+            FormData形式传参
             
-            需要(加\*为必须填写): Age, Email(\*), Name(\*), Password(\*), ProfilePhoto
+            可选: securityKey 用于确定注册用户权限
             
-            可选: securityKey 复用以确定注册用户权限
+            若成功将响应201并返回用户信息; 若失败返回500(格式错误), 400(邮箱已存在/数据库表为空)
+            
             </remarks>
-            <param name="user">用户信息</param>
-            <returns>若成功响应201并返回用户信息; 若失败返回500(JSON格式错误), 400(邮箱已存在/数据库表为空)</returns>
+            <param name="email">邮箱地址</param>
+            <param name="name">用户名</param>
+            <param name="password">密码</param>
+            <param name="securityKey">安全代码</param>
+            <returns>若成功将响应201并返回用户信息; 若失败返回500(格式错误), 400(邮箱已存在/数据库表为空)</returns>
         </member>
-        <member name="M:EMO_Cloud.Controllers.UsersController.ChangePassword(System.Text.Json.Nodes.JsonObject)">
+        <member name="M:EMO_Cloud.Controllers.UsersController.FindBackPassword(System.String,System.String,System.String)">
             <summary>
             找回密码
             </summary>
             <remarks>
+            POST: api/Users/FindBackPassword
+            
+            FormData形式传输
+            
+            若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
+            
+            </remarks>
+            <param name="email">邮箱地址</param>
+            <param name="newPassword">新密码</param>
+            <param name="securityKey">安全代码</param>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.ChangePassword(System.String,System.String)">
+            <summary>
+            修改密码
+            </summary>
+            <remarks>
             POST: api/Users/ChangePassword
             
-            JSON形式传输
+            FormData形式传输
             
-            email: 邮箱地址
+            若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
             
-            securityKey: 安全码
-            
-            newPassword: 新密码
             </remarks>
-            <param name="obj">包含"email", "securityKey"和"newPassword"字段的JSON对象</param>
-            <returns>若成功响应201并返回用户信息; 若失败返回500(JSON格式错误), 400(安全码错误), 404(用户不存在)</returns>
+            <param name="email">邮箱地址</param>
+            <param name="oldPassword">原始密码</param>
+            <param name="newPassword">新密码</param>
+        </member>
+        <member name="M:EMO_Cloud.Controllers.UsersController.ChangePassword(System.String)">
+            <summary>
+            修改用户名
+            </summary>
+            <remarks>
+            POST: api/Users/ChangeUserName
+            
+            FormData形式传输
+            
+            若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
+            
+            </remarks>
+            <param name="newName">新用户名</param>
         </member>
         <member name="M:EMO_Cloud.Controllers.UsersController.UserExists(System.String)">
             <summary>

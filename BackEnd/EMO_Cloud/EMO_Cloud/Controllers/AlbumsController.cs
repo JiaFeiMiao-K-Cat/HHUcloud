@@ -7,11 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EMO_Cloud.Data;
 using EMO_Cloud.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace EMO_Cloud.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AlbumsController : ControllerBase
     {
         private readonly Context _context;
@@ -22,7 +25,17 @@ namespace EMO_Cloud.Controllers
         }
 
         // GET: api/Albums
+        /// <summary>
+        /// 获取所有专辑
+        /// </summary>
+        /// <remarks>
+        /// GET: api/Albums
+        /// 
+        /// 需要管理员及以上权限
+        /// </remarks>
+        /// <returns>所有专辑</returns>
         [HttpGet]
+        [Authorize(Roles = "Root,Administrator")]
         public async Task<ActionResult<IEnumerable<Album>>> GetAlbum()
         {
           if (_context.Album == null)
@@ -33,7 +46,18 @@ namespace EMO_Cloud.Controllers
         }
 
         // GET: api/Albums/5
+        /// <summary>
+        /// 获取专辑信息
+        /// </summary>
+        /// <remarks>
+        /// GET: api/Albums/5
+        /// 
+        /// 允许匿名访问
+        /// </remarks>
+        /// <param name="id">专辑ID</param>
+        /// <returns>专辑信息</returns>
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<Album>> GetAlbum(long id)
         {
           if (_context.Album == null)
@@ -51,8 +75,21 @@ namespace EMO_Cloud.Controllers
         }
 
         // PUT: api/Albums/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// 修改指定ID的专辑信息
+        /// </summary>
+        /// <remarks>
+        /// PUT: api/Albums/5
+        /// 
+        /// 需要管理员及以上权限
+        /// 
+        /// JSON形式传输
+        /// </remarks>
+        /// <param name="id">专辑ID</param>
+        /// <param name="album">专辑对象</param>
+        /// <returns></returns>
         [HttpPut("{id}")]
+        [Authorize(Roles = "Root,Administrator")]
         public async Task<IActionResult> PutAlbum(long id, Album album)
         {
             if (id != album.Id)
@@ -82,8 +119,20 @@ namespace EMO_Cloud.Controllers
         }
 
         // POST: api/Albums
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// 增加专辑
+        /// </summary>
+        /// <remarks>
+        /// POST: api/Albums
+        /// 
+        /// 需要管理员及以上权限
+        /// 
+        /// JSON形式传输
+        /// </remarks>
+        /// <param name="album">专辑对象</param>
+        /// <returns></returns>
         [HttpPost]
+        [Authorize(Roles = "Root,Administrator")]
         public async Task<ActionResult<Album>> PostAlbum(Album album)
         {
           if (_context.Album == null)
@@ -97,7 +146,20 @@ namespace EMO_Cloud.Controllers
         }
 
         // DELETE: api/Albums/5
+        /// <summary>
+        /// 删除专辑
+        /// </summary>
+        /// <remarks>
+        /// DELETE: api/Albums/5
+        /// 
+        /// 需要管理员及以上权限
+        ///
+        /// 若成功返回204
+        /// </remarks>
+        /// <param name="id">专辑ID</param>
+        /// <returns>若成功返回204</returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Root,Administrator")]
         public async Task<IActionResult> DeleteAlbum(long id)
         {
             if (_context.Album == null)

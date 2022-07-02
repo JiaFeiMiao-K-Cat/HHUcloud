@@ -25,7 +25,17 @@ namespace EMO_Cloud.Controllers
         }
 
         // GET: api/Songs
+        /// <summary>
+        /// 获取所有歌曲列表
+        /// </summary>
+        /// <remarks>
+        /// GET: api/Songs
+        /// 
+        /// 允许匿名访问
+        /// </remarks>
+        /// <returns>所有歌曲列表</returns>
         [HttpGet]
+        [Authorize(Roles = "Root,Administrator")]
         public async Task<ActionResult<IEnumerable<Song>>> GetSong()
         {
           if (_context.Song == null)
@@ -36,6 +46,16 @@ namespace EMO_Cloud.Controllers
         }
 
         // GET: api/Songs/5
+        /// <summary>
+        /// 获取歌曲信息
+        /// </summary>
+        /// <remarks>
+        /// GET: api/Songs/5
+        /// 
+        /// 允许匿名访问
+        /// </remarks>
+        /// <param name="id">歌曲ID</param>
+        /// <returns>歌曲信息</returns>
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<ActionResult<Song>> GetSong(long id)
@@ -81,6 +101,8 @@ namespace EMO_Cloud.Controllers
         /// </summary>
         /// <remarks>
         /// GET: api/Songs/Top/5
+        /// 
+        /// 允许匿名访问
         /// </remarks>
         /// <param name="size">列表长度</param>
         /// <returns>歌曲列表, 长度超过曲库大小时只返回曲库</returns>
@@ -110,12 +132,14 @@ namespace EMO_Cloud.Controllers
         /// </summary>
         /// <remarks>
         /// GET: api/Songs/Artist/5
+        /// 
+        /// 允许匿名访问
         /// </remarks>
         /// <param name="songId">歌曲ID</param>
         /// <returns>歌手</returns>
-        [HttpGet("Artist/{songId}")]
+        [HttpGet("Artists/{songId}")]
         [AllowAnonymous]
-        public async Task<ActionResult<List<Tuple<string, long>>>> Artist(long songId)
+        public async Task<ActionResult<List<Tuple<string, long>>>> Artists(long songId)
         {
             if (_context.Artist == null || _context.Song == null || !SongExists(songId))
             {
@@ -134,17 +158,23 @@ namespace EMO_Cloud.Controllers
         /// <summary>
         /// 添加歌曲
         /// </summary>
-        /// <param name="song"></param>
+        /// <remarks>
+        /// POST: api/Songs/AddSong
+        /// 
+        /// 需要管理员及以上权限
+        /// 
+        /// JSON形式传输
+        /// </remarks>
+        /// <param name="song">歌曲对象</param>
         /// <returns></returns>
         [HttpPost]
-        [AllowAnonymous]
-        public async Task<ActionResult<Song>> PostSong(Song _song)
+        [Authorize(Roles = "Root,Administrator")]
+        public async Task<ActionResult<Song>> PostSong(Song song)
         {
             if (_context.Song == null)
             {
                 return Problem("Entity set 'Context.Song'  is null.");
             }
-            Song song = new Song();
             _context.Song.Add(song);
             try
             {
@@ -182,13 +212,20 @@ namespace EMO_Cloud.Controllers
         /// <summary>
         /// 搜索歌曲
         /// </summary>
-        /// <param name="pattern"></param>
-        /// <returns></returns>
+        /// <remarks>
+        /// POST: api/Songs/Search
+        /// 
+        /// 允许匿名访问
+        /// 
+        /// FormData形式传输
+        /// </remarks>
+        /// <param name="keywords">关键词</param>
+        /// <returns>歌曲列表</returns>
         [HttpPost("Search")]
         [AllowAnonymous]
-        public async Task<ActionResult<List<Song>>> Search([FromBody]string pattern)
+        public async Task<ActionResult<List<Song>>> Search([FromBody]string keywords)
         {
-            var terms = pattern.Split(' ');
+            var terms = keywords.Split(' ');
             var list = _context.Song.ToList()
 
                 .Where(q => terms.All(term => q.Title.Contains(term)))
@@ -204,6 +241,18 @@ namespace EMO_Cloud.Controllers
         }
 
         // DELETE: api/Songs/5
+        /// <summary>
+        /// 删除指定ID的歌曲
+        /// </summary>
+        /// <remarks>
+        /// DELETE: api/Songs/5
+        /// 
+        /// 需要管理员及以上权限
+        /// 
+        /// 若成功返回204
+        /// </remarks>
+        /// <param name="id">歌曲ID</param>
+        /// <returns>若成功返回204</returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Root,Administrator")]
         public async Task<IActionResult> DeleteSong(long id)
@@ -225,23 +274,20 @@ namespace EMO_Cloud.Controllers
 
             return NoContent();
         }
-        // GET: api/Songs/Artists/5
-        [HttpGet("Artists/{songId}")]
-        [AllowAnonymous]
-        public async Task<ActionResult<List<Tuple<string, long>>>> Artists(int songId)
-        {
-            if (_context.Song == null || !SongExists(songId))
-            {
-                return NotFound();
-            }
-            return _context.ArtistHasSongs?
-                .Where(e => e.SongId == songId)
-                .Select(p => new Tuple<string, long>(
-                    (_context.Artist.FirstOrDefault(q => q.Id == p.ArtistId)??new Artist()).Name,
-                    p.ArtistId))
-                .ToList();
-        }
+
         // GET: api/Songs/Albums/5
+        /// <summary>
+        /// 指定ID歌曲所属专辑
+        /// </summary>
+        /// <remarks>
+        /// GET: api/Songs/Albums/5
+        /// 
+        /// 允许匿名访问
+        /// 
+        /// 返回含有专辑名称(Item1)和专辑ID(Item2)的元组
+        /// </remarks>
+        /// <param name="songId">歌曲ID</param>
+        /// <returns>返回含有专辑名称和专辑ID的元组</returns>
         [HttpGet("Albums/{songId}")]
         [AllowAnonymous]
         public async Task<ActionResult<Tuple<string, long>>> Albums(long songId)

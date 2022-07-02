@@ -34,8 +34,11 @@ namespace EMO_Cloud.Controllers
         /// </summary>
         /// <remarks>
         /// POST: api/Token
+        /// 
+        /// FormData形式传输
         /// </remarks>
-        /// <param name="obj">包含"email"和"password"字段的JSON对象</param>
+        /// <param name="email">邮箱地址</param>
+        /// <param name="password">密码</param>
         /// <returns>若成功响应201并返回Token, 若失败响应400</returns>
         [HttpPost]
         public async Task<IActionResult> PostUser([FromForm] string email, [FromForm] string password)

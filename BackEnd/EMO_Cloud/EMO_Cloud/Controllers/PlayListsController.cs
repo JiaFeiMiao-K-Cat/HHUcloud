@@ -25,8 +25,17 @@ namespace EMO_Cloud.Controllers
         }
 
         // GET: api/PlayLists
+        /// <summary>
+        /// 获取所有歌曲列表
+        /// </summary>
+        /// <remarks>
+        /// GET: api/PlayLists
+        /// 
+        /// 需要管理员及以上权限
+        /// </remarks>
+        /// <returns>所有歌曲列表</returns>
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize(Roles = "Root,Administrator")]
         public async Task<ActionResult<IEnumerable<PlayList>>> GetPlayList()
         {
           if (_context.PlayList == null)
@@ -37,6 +46,16 @@ namespace EMO_Cloud.Controllers
         }
 
         // GET: api/PlayLists/5
+        /// <summary>
+        /// 获取指定ID的播放列表
+        /// </summary>
+        /// <remarks>
+        /// GET: api/PlayLists/5
+        /// 
+        /// 允许匿名访问
+        /// </remarks>
+        /// <param name="id">歌曲列表ID</param>
+        /// <returns>歌曲列表</returns>
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<ActionResult<PlayList>> GetPlayList(long id)
@@ -61,7 +80,17 @@ namespace EMO_Cloud.Controllers
         }
 
         // POST: api/PlayLists/AddSong
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// 向歌单添加歌曲
+        /// </summary>
+        /// <remarks>
+        /// POST: api/PlayLists/AddSong
+        /// 
+        /// FormData形式传输
+        /// </remarks>
+        /// <param name="playlistId">歌单ID</param>
+        /// <param name="songId">歌曲ID</param>
+        /// <returns></returns>
         [HttpPost("AddSong")]
         public async Task<ActionResult> AddSong([FromForm] long playlistId, [FromForm]long songId)
         {
@@ -92,7 +121,17 @@ namespace EMO_Cloud.Controllers
             return Ok();
         }
         // POST: api/PlayLists/RemoveSong
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// 从歌单删除歌曲
+        /// </summary>
+        /// <remarks>
+        /// POST: api/PlayLists/RemoveSong
+        /// 
+        /// FormData形式传输
+        /// </remarks>
+        /// <param name="playlistId">歌单ID</param>
+        /// <param name="songId">歌曲ID</param>
+        /// <returns></returns>
         [HttpPost("RemoveSong")]
         public async Task<ActionResult> RemoveSong([FromForm] long playlistId, [FromForm] long songId)
         {
@@ -120,9 +159,20 @@ namespace EMO_Cloud.Controllers
             return Ok();
         }
         // POST: api/PlayLists
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// 增加歌单
+        /// </summary>
+        /// <remarks>
+        /// POST: api/PlayLists
+        /// 
+        /// 需要管理员及以上权限
+        /// 
+        /// JSON形式传输
+        /// </remarks>
+        /// <param name="playList">歌单</param>
+        /// <returns>歌单信息</returns>
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize(Roles = "Root,Administrator")]
         public async Task<ActionResult<PlayList>> PostPlayList(PlayList playList)
         {
             if (_context.PlayList == null)
@@ -136,7 +186,20 @@ namespace EMO_Cloud.Controllers
         }
 
         // DELETE: api/PlayLists/5
+        /// <summary>
+        /// 删除歌单
+        /// </summary>
+        /// <remarks>
+        /// DELETE: api/PlayLists/5
+        /// 
+        /// 需要管理员及以上权限
+        /// 
+        /// 若成功返回204
+        /// </remarks>
+        /// <param name="id">歌单ID</param>
+        /// <returns>若成功返回204</returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Root,Administrator")]
         public async Task<IActionResult> DeletePlayList(long id)
         {
             if (_context.PlayList == null)

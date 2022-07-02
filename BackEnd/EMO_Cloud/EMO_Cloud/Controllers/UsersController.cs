@@ -36,7 +36,7 @@ namespace EMO_Cloud.Controllers
         /// <remarks>
         /// GET: api/Users
         /// 
-        /// 需要提供Token, 管理员及以上用户可用
+        /// 需要管理员及以上权限
         /// </remarks>
         /// <returns>若成功响应201并返回所有用户信息; 若失败响应404(数据库表为空), 400(授权失败)</returns>
         [HttpGet]
@@ -56,7 +56,7 @@ namespace EMO_Cloud.Controllers
         /// <remarks>
         /// GET: api/Users/5
         /// 
-        /// 需要提供Token, 管理员及以上用户可用
+        /// 需要管理员及以上权限
         /// </remarks>
         /// <returns>若成功响应201并返回所有用户信息; 若失败响应404(数据库表为空), 400(授权失败)</returns>
         [HttpGet("{id}")]
@@ -78,16 +78,13 @@ namespace EMO_Cloud.Controllers
         }
 
         /// <summary>
-        /// 获取用户信息
+        /// 获取用户本人信息
         /// </summary>
         /// <remarks>
         /// POST: api/Users/Info
-        /// 
-        /// 需要提供Token
         /// </remarks>
         /// <returns>若成功响应201并返回用户信息(隐去密码和安全码), 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
         [HttpPost("Info")]
-        [Authorize(Roles = "Root,Administrator,User")]
         public async Task<ActionResult<User>> Info()
         {
             if (_context.User == null)
@@ -123,12 +120,9 @@ namespace EMO_Cloud.Controllers
         /// </summary>
         /// <remarks>
         /// POST: api/Users/PlayList
-        /// 
-        /// 需要提供Token
         /// </remarks>
         /// <returns>若成功响应201并返回用户歌单列表, 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
         [HttpPost("PlayList")]
-        [Authorize(Roles = "Root,Administrator,User")]
         public async Task<ActionResult<List<Tuple<string, long>>>> PlayList()
         {
             if (_context.User == null)
@@ -165,6 +159,8 @@ namespace EMO_Cloud.Controllers
         /// </summary>
         /// <remarks>
         /// POST: api/Users/Regist
+        /// 
+        /// 允许匿名访问
         /// 
         /// FormData形式传参
         /// 
@@ -230,6 +226,8 @@ namespace EMO_Cloud.Controllers
         /// <remarks>
         /// POST: api/Users/FindBackPassword
         /// 
+        /// 允许匿名访问
+        /// 
         /// FormData形式传输
         /// 
         /// 若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
@@ -282,7 +280,6 @@ namespace EMO_Cloud.Controllers
         /// 若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
         /// 
         /// </remarks>
-        /// <param name="email">邮箱地址</param>
         /// <param name="oldPassword">原始密码</param>
         /// <param name="newPassword">新密码</param>
         [HttpPost("ChangePassword")]
@@ -317,6 +314,39 @@ namespace EMO_Cloud.Controllers
             user.SecurityKey = string.Empty; // hide information
 
             return user;
+        }
+        /// <summary>
+        /// 获取用户按时间倒序的播放记录
+        /// </summary>
+        /// <remarks>
+        /// POST: api/Users/RecentPlay
+        /// </remarks>
+        /// <param name="size">记录条数</param>
+        /// <returns>最近size条记录, 若记录条数不足, 返回所有记录</returns>
+        [HttpPost("RecentPlay")]
+        public async Task<ActionResult<List<Tuple<string, long>>>> RecentPlay([FromForm] int size)
+        {
+            if (_context.User == null)
+            {
+                return Problem("Entity set 'Context.User'  is null.");
+            }
+
+            long id = GetUserId();
+
+            User user = await _context.User.FindAsync(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return _context.PlayRecord?
+                .Where(e => e.UserId == user.Id)
+                .OrderBy(e => e.LastTime)
+                .Select(p => new Tuple<string, long>(
+                    (_context.Song.Find(p.SongId)?? new Song()).Title, 
+                    p.Id)).Take(size)
+                .ToList();
         }
 
         /// <summary>
