@@ -278,6 +278,8 @@
             GET: api/Songs/Artist/5
             
             允许匿名访问
+            
+            返回含有歌手姓名(Item1)和歌手ID(Item2)的元组列表
             </remarks>
             <param name="songId">歌曲ID</param>
             <returns>歌手</returns>
@@ -333,7 +335,7 @@
             
             允许匿名访问
             
-            返回含有专辑名称(Item1)和专辑ID(Item2)的元组
+            返回含有专辑名称(Item1)和专辑ID(Item2)的元组列表
             </remarks>
             <param name="songId">歌曲ID</param>
             <returns>返回含有专辑名称和专辑ID的元组</returns>
@@ -402,6 +404,10 @@
             </summary>
             <remarks>
             POST: api/Users/PlayList
+            
+            **当前用户不存在歌单时会自动创建一个**
+            
+            返回含有歌单名称(Item1)和歌单ID(Item2)的元组列表
             </remarks>
             <returns>若成功响应201并返回用户歌单列表, 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
         </member>
@@ -466,6 +472,10 @@
             </summary>
             <remarks>
             POST: api/Users/RecentPlay
+            
+            FormData形式传输
+            
+            返回含有歌名(Item1), 歌曲ID(Item2)和播放时间(Item3)的元组列表
             </remarks>
             <param name="size">记录条数</param>
             <returns>最近size条记录, 若记录条数不足, 返回所有记录</returns>

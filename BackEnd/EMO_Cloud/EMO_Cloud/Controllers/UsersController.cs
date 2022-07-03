@@ -120,6 +120,10 @@ namespace EMO_Cloud.Controllers
         /// </summary>
         /// <remarks>
         /// POST: api/Users/PlayList
+        /// 
+        /// **当前用户不存在歌单时会自动创建一个**
+        /// 
+        /// 返回含有歌单名称(Item1)和歌单ID(Item2)的元组列表
         /// </remarks>
         /// <returns>若成功响应201并返回用户歌单列表, 若失败响应400(授权失败/数据库表为空), 404(用户不存在)</returns>
         [HttpPost("PlayList")]
@@ -212,7 +216,7 @@ namespace EMO_Cloud.Controllers
             user.Name = name;
             user.Password = MyTools.ComputeSHA256Hash(password + _configuration["Jwt:Salt"]);
             user.CreatedDate = DateTime.Now.ToString();
-            user.SecurityKey = MyTools.ComputeSHA256Hash(user.CreatedDate + _configuration["Jwt:Salt"]);
+            user.SecurityKey = MyTools.ComputeSHA256Hash(user.CreatedDate + password + _configuration["Jwt:Salt"]);
             
             _context.User.Add(user);
             await _context.SaveChangesAsync();
@@ -320,11 +324,15 @@ namespace EMO_Cloud.Controllers
         /// </summary>
         /// <remarks>
         /// POST: api/Users/RecentPlay
+        /// 
+        /// FormData形式传输
+        /// 
+        /// 返回含有歌名(Item1), 歌曲ID(Item2)和播放时间(Item3)的元组列表
         /// </remarks>
         /// <param name="size">记录条数</param>
         /// <returns>最近size条记录, 若记录条数不足, 返回所有记录</returns>
         [HttpPost("RecentPlay")]
-        public async Task<ActionResult<List<Tuple<string, long>>>> RecentPlay([FromForm] int size)
+        public async Task<ActionResult<List<Tuple<string, long, DateTime>>>> RecentPlay([FromForm] int size)
         {
             if (_context.User == null)
             {
@@ -340,12 +348,12 @@ namespace EMO_Cloud.Controllers
                 return NotFound();
             }
 
-            return _context.PlayRecord?
+            return _context.PlayRecord?.ToList()
                 .Where(e => e.UserId == user.Id)
-                .OrderBy(e => e.LastTime)
-                .Select(p => new Tuple<string, long>(
+                .OrderByDescending(e => e.LastTime) // 按时间近->远顺序排列
+                .Select(p => new Tuple<string, long, DateTime>(
                     (_context.Song.Find(p.SongId)?? new Song()).Title, 
-                    p.Id)).Take(size)
+                    p.SongId, p.LastTime)).Take(size)
                 .ToList();
         }
 
@@ -362,7 +370,7 @@ namespace EMO_Cloud.Controllers
         /// </remarks>
         /// <param name="newName">新用户名</param>
         [HttpPost("ChangeUserName")]
-        public async Task<ActionResult<User>> ChangePassword([FromForm] string newName)
+        public async Task<ActionResult<User>> ChangeUserName([FromForm] string newName)
         {
             if (_context.User == null)
             {
@@ -402,12 +410,17 @@ namespace EMO_Cloud.Controllers
         {
             return (_context.User?.Any(e => e.Email == email)).GetValueOrDefault();
         }
+
         /// <summary>
         /// copy from: https://stackoverflow.com/questions/50580232/get-userid-from-jwt-on-all-controller-methods
         /// </summary>
         /// <returns>当前Token的用户ID</returns>
         protected long GetUserId()
         {
+            if (this.User.Claims.FirstOrDefault(i => i.Type == "UserId") == null)
+            {
+                return -1;
+            } // Without Token
             return long.Parse(this.User.Claims.First(i => i.Type == "UserId").Value);
         }
     }

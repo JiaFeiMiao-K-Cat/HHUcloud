@@ -73,10 +73,10 @@ namespace EMO_Cloud.Controllers
             }
 
             long userId = GetUserId();
-
+            Console.WriteLine($"User({userId}) Play Song({id})");
             if (_context.User.Any(e => e.Id == userId))
             {
-                PlayRecord playRecord = await _context.PlayRecord.FirstOrDefaultAsync(e => e.UserId == userId);
+                PlayRecord playRecord = await _context.PlayRecord.FirstOrDefaultAsync(e => e.UserId == userId && e.SongId == id);
                 if (playRecord == null)
                 {
                     playRecord = new PlayRecord();
@@ -115,7 +115,7 @@ namespace EMO_Cloud.Controllers
                 return NotFound();
             }
             
-            List<Song> list = _context.Song.OrderBy(e => e.Count).Take(size).ToList();
+            List<Song> list = _context.Song.OrderByDescending(e => e.Count).Take(size).ToList();
 
             foreach (Song song in list)
             {
@@ -134,6 +134,8 @@ namespace EMO_Cloud.Controllers
         /// GET: api/Songs/Artist/5
         /// 
         /// 允许匿名访问
+        /// 
+        /// 返回含有歌手姓名(Item1)和歌手ID(Item2)的元组列表
         /// </remarks>
         /// <param name="songId">歌曲ID</param>
         /// <returns>歌手</returns>
@@ -154,12 +156,12 @@ namespace EMO_Cloud.Controllers
                 .ToList();
         }
 
-        // POST: api/Songs/AddSong
+        // POST: api/Songs
         /// <summary>
         /// 添加歌曲
         /// </summary>
         /// <remarks>
-        /// POST: api/Songs/AddSong
+        /// POST: api/Songs
         /// 
         /// 需要管理员及以上权限
         /// 
@@ -227,7 +229,6 @@ namespace EMO_Cloud.Controllers
         {
             var terms = keywords.Split(' ');
             var list = _context.Song.ToList()
-
                 .Where(q => terms.All(term => q.Title.Contains(term)))
                 .ToList();
             foreach (var item in list)
@@ -284,7 +285,7 @@ namespace EMO_Cloud.Controllers
         /// 
         /// 允许匿名访问
         /// 
-        /// 返回含有专辑名称(Item1)和专辑ID(Item2)的元组
+        /// 返回含有专辑名称(Item1)和专辑ID(Item2)的元组列表
         /// </remarks>
         /// <param name="songId">歌曲ID</param>
         /// <returns>返回含有专辑名称和专辑ID的元组</returns>
@@ -313,6 +314,10 @@ namespace EMO_Cloud.Controllers
         /// <returns>当前Token的用户ID</returns>
         protected long GetUserId()
         {
+            if (this.User.Claims.FirstOrDefault(i => i.Type == "UserId") == null)
+            {
+                return -1;
+            } // Without Token
             return long.Parse(this.User.Claims.First(i => i.Type == "UserId").Value);
         }
     }
