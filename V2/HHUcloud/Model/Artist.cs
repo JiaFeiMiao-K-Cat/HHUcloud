@@ -15,4 +15,10 @@ public class Artist
 
     [Comment("简介")]
     public string? Description { get; set; }
+
+    [NotMapped]
+    public List<long>? AlbumIds { get; set; }
+
+    [NotMapped]
+    public List<string>? AlbumTitles { get; set; }
 }

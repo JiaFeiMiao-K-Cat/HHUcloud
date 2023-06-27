@@ -21,4 +21,13 @@ public class Song
 
     [Comment("专辑Id")]
     public long AlbumId { get; set; }
+
+    [NotMapped]
+    public string? CoverLink { get; set; }
+
+    [NotMapped]
+    public List<long>? ArtistIds { get; set; }
+
+    [NotMapped]
+    public List<string>? ArtistNames { get; set; }
 }

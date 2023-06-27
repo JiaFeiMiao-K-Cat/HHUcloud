@@ -18,4 +18,10 @@ public class Album
 
     [Comment("封面链接")]
     public string CoverLink { get; set; }
+
+    [NotMapped]
+    public List<long>? ArtistIds { get; set; }
+
+    [NotMapped]
+    public List<string>? ArtistNames { get; set; }
 }
