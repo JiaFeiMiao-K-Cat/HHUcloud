@@ -4,3 +4,6 @@ BackEnd/EMO_Cloud/.vs/*
 V2/HHUcloud/.vs/*
 V2/HHUcloud/bin/*
 V2/HHUcloud/obj/*
+V2/HHUcloud/Data.db
+V2/HHUcloud/Data.db-shm
+V2/HHUcloud/Data.db-wal

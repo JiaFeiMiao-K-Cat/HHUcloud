@@ -1,4 +1,7 @@
 
+using HHUcloud.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace HHUcloud;
 
 public class Program
@@ -6,6 +9,10 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddDbContext<Context>(options =>
+            options.UseSqlite(builder.Configuration.GetConnectionString("Context") ??
+                throw new InvalidOperationException("Connection string 'UserContext' not found.")));
 
         // Add services to the container.
 
@@ -22,6 +29,17 @@ public class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+
+            var context = services.GetRequiredService<Context>();
+            context.Database.EnsureCreated();
+            // DbInitializer.Initialize(context);
+        }
+
+        app.UseHttpsRedirection();
 
         app.UseAuthorization();
 
