@@ -14,7 +14,7 @@ public class Album
     public string Title { get; set; }
 
     [Comment("发行时间")]
-    public DateTime PublishDate { get; set; }
+    public DateTime Published { get; set; }
 
     [Comment("封面链接")]
     public string CoverLink { get; set; }
