@@ -79,6 +79,38 @@ public class UsersController : ControllerBase
         return user;
     }
 
+    /// <summary>
+    /// 获取当前用户信息
+    /// </summary>
+    /// <remarks>
+    /// GET: api/Users/Info
+    /// 
+    /// 需要Token
+    /// </remarks>
+    /// <returns>若成功响应201并返回当前用户信息; 若失败响应404(数据库表为空), 400(授权失败)</returns>
+    [HttpGet("Info")]
+    [Authorize(Roles = "Root,Administrator,User,Guest")]
+    public async Task<ActionResult<User>> Info()
+    {
+        if (_context.User == null)
+        {
+            return NotFound();
+        }
+        var _user = await GetUserAsync(GetUserId());
+
+        if (_user == null)
+        {
+            return NotFound();
+        }
+
+        User user = JsonSerializer.Deserialize<User>(JsonSerializer.Serialize(_user)); //Deep Copy
+
+        user.UserPassword = string.Empty; // hide information
+        user.SecurityKey = string.Empty; // hide information
+
+        return user;
+    }
+
     // PUT: api/Users/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
@@ -313,22 +345,26 @@ public class UsersController : ControllerBase
         {
             password = Sha256Tool.ComputeSHA256Hash(password + _configuration["Jwt:Salt"]); // 加盐并哈希
 
-            user = await GetUserAsync(email);
+            var _user = await GetUserAsync(email);
 
-            if (user != null)
+            if (_user != null)
             {
+                if (password != _user.UserPassword)
+                {
+                    return BadRequest("Wrong email or password");
+                }
                 string role = "Guest";
-                if ((Role.Root | user.UserRole) > 0)
+                if ((Role.Root | _user.UserRole) > 0)
                 {
                     role = Role.Root.ToString();
                 }
-                else if ((Role.Administrator | user.UserRole) > 0)
+                else if ((Role.Administrator | _user.UserRole) > 0)
                 {
                     role = Role.Administrator.ToString();
                 }
                 else
                 {
-                    if ((Role.User | user.UserRole) > 0)
+                    if ((Role.User | _user.UserRole) > 0)
                     {
                         role = Role.User.ToString();
                     }
@@ -339,8 +375,8 @@ public class UsersController : ControllerBase
                     new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                    new Claim("UserId", user.UserId.ToString()),
-                    new Claim("UserName", user.Name ?? $"用户{user.UserId}"),
+                    new Claim("UserId", _user.UserId.ToString()),
+                    new Claim("UserName", _user.Name ?? $"用户{_user.UserId}"),
                     new Claim(ClaimTypes.Role, role)
                 };
 
@@ -383,6 +419,8 @@ public class UsersController : ControllerBase
         (_context.User?.Any(e => e.UserId == id)).GetValueOrDefault();
     private bool UserExists(string email) =>
         (_context.User?.Any(e => e.Email == email)).GetValueOrDefault();
+    private async Task<User?> GetUserAsync(long id) =>
+        await _context.User.FirstOrDefaultAsync(u => u.UserId == id);
     private async Task<User?> GetUserAsync(string email) => 
         await _context.User.FirstOrDefaultAsync(u => u.Email == email);
 }

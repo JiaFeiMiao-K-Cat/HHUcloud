@@ -23,6 +23,9 @@ public class Song
     public long AlbumId { get; set; }
 
     [NotMapped]
+    public string? AlbumTitle { get; set; }
+
+    [NotMapped]
     public string? CoverLink { get; set; }
 
     [NotMapped]

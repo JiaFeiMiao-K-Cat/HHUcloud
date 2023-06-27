@@ -58,6 +58,59 @@ public class SongsController : ControllerBase
 
         return song;
     }
+    
+    /// <summary>
+     /// 点击量最高的歌曲列表
+     /// </summary>
+     /// <remarks>
+     /// GET: api/Songs/Top/5
+     /// 
+     /// 允许匿名访问
+     /// </remarks>
+     /// <param name="size">列表长度</param>
+     /// <returns>歌曲列表, 长度超过曲库大小时只返回曲库</returns>
+    [HttpGet("Top/{size}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<Song>>> TopAsync(int size)
+    {
+        if (_context.Song == null)
+        {
+            return NotFound();
+        }
+
+        List<Song> list = _context.Song.OrderByDescending(e => e.Count).Take(size).ToList();
+
+        foreach (Song song in list)
+        {
+            song.CoverLink = (await _context.Album?
+                .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
+                .CoverLink;
+
+            song.AlbumTitle = (await _context.Album?
+                .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
+                .Title;
+
+            song.ArtistIds = _context.ArtistHasSong?
+                .Where(e => e.SongId == song.SongId)
+                .Select(e => e.ArtistId)
+                .ToList();
+
+            if (song.ArtistIds != null)
+            {
+                song.ArtistNames = new List<string>();
+                foreach (var artistId in song.ArtistIds)
+                {
+                    song.ArtistNames.Add(
+                        _context.Artist?
+                            .FirstOrDefault(e => e.ArtistId == artistId)?
+                            .Name
+                        );
+                }
+            }
+        }
+
+        return list;
+    }
 
     // PUT: api/Songs/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
