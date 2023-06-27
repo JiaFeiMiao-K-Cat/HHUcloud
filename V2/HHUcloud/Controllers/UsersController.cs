@@ -65,15 +65,30 @@ public class UsersController : ControllerBase
     [Authorize(Roles = "Root,Administrator")]
     public async Task<ActionResult<User>> GetUser(long id)
     {
-      if (_context.User == null)
-      {
-          return NotFound();
-      }
+        if (_context.User == null)
+        {
+            return NotFound();
+        }
         var user = await _context.User.FindAsync(id);
 
         if (user == null)
         {
             return NotFound();
+        }
+
+        user.PlaylistIds = await _context.Playlist
+            .Where(e => e.UserId == user.UserId)
+            .Select(e => e.PlaylistId)
+            .ToListAsync();
+
+        if (user.PlaylistIds != null)
+        {
+            user.PlaylistTitles = new List<string>();
+
+            foreach (var playlist in user.PlaylistIds)
+            {
+                user.PlaylistTitles.Add(_context.Playlist.FirstOrDefault(e => e.PlaylistId == playlist)?.Title);
+            }
         }
 
         return user;
@@ -300,6 +315,15 @@ public class UsersController : ControllerBase
             + _configuration["Jwt:Salt"]);
 
         _context.User.Add(user);
+        await _context.SaveChangesAsync();
+
+        var playlist = new Playlist()
+        {
+            UserId = user.UserId,
+            Title = "我的收藏",
+            Created = DateTime.UtcNow,
+        };
+        _context.Playlist.Add(playlist);
         await _context.SaveChangesAsync();
 
         return CreatedAtAction("GetUser", new { id = user.UserId }, user);

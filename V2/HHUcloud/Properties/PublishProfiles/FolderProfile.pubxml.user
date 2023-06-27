@@ -5,7 +5,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>E:\HHUcloud\V2\HHUcloud\bin\Release\net7.0\publish\</_PublishTargetUrl>
-    <History>True|2023-06-27T09:04:54.1706618Z;True|2023-06-27T16:48:13.6282194+08:00;True|2023-06-27T15:38:14.9150620+08:00;True|2023-06-27T15:07:00.1418173+08:00;True|2023-06-27T14:49:43.9670434+08:00;True|2023-06-27T11:07:48.4910115+08:00;</History>
+    <History>True|2023-06-27T14:36:20.3552833Z;True|2023-06-27T17:04:54.1706618+08:00;True|2023-06-27T16:48:13.6282194+08:00;True|2023-06-27T15:38:14.9150620+08:00;True|2023-06-27T15:07:00.1418173+08:00;True|2023-06-27T14:49:43.9670434+08:00;True|2023-06-27T11:07:48.4910115+08:00;</History>
     <LastFailureDetails />
   </PropertyGroup>
 </Project>

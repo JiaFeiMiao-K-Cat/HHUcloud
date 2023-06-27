@@ -589,6 +589,8 @@
         "tags": [
           "Songs"
         ],
+        "summary": "获取所有歌曲列表",
+        "description": "GET: api/Songs\r\n\r\n允许匿名访问",
         "operationId": "GetSong",
         "responses": {
           "200": {
@@ -626,8 +628,11 @@
         "tags": [
           "Songs"
         ],
+        "summary": "添加歌曲",
+        "description": "POST: api/Songs\r\n\r\n管理员及以上权限",
         "operationId": "PostSong",
         "requestBody": {
+          "description": "歌曲信息",
           "content": {
             "application/json": {
               "schema": {
@@ -675,11 +680,14 @@
         "tags": [
           "Songs"
         ],
+        "summary": "获取指定ID的歌曲信息",
+        "description": "GET: api/Songs/5\r\n\r\n允许匿名访问",
         "operationId": "GetSong",
         "parameters": [
           {
             "name": "id",
             "in": "path",
+            "description": "歌曲ID",
             "required": true,
             "style": "simple",
             "schema": {
@@ -715,11 +723,14 @@
         "tags": [
           "Songs"
         ],
+        "summary": "更新歌曲信息",
+        "description": "PUT: api/Songs/5\r\n\r\n需要管理员及以上权限",
         "operationId": "PutSong",
         "parameters": [
           {
             "name": "id",
             "in": "path",
+            "description": "歌曲ID",
             "required": true,
             "style": "simple",
             "schema": {
@@ -729,6 +740,7 @@
           }
         ],
         "requestBody": {
+          "description": "歌曲信息",
           "content": {
             "application/json": {
               "schema": {
@@ -757,11 +769,14 @@
         "tags": [
           "Songs"
         ],
+        "summary": "删除歌曲",
+        "description": "DELETE: api/Songs/5\r\n\r\n管理员及以上权限",
         "operationId": "DeleteSong",
         "parameters": [
           {
             "name": "id",
             "in": "path",
+            "description": "歌曲ID",
             "required": true,
             "style": "simple",
             "schema": {
@@ -773,6 +788,112 @@
         "responses": {
           "200": {
             "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Songs/Search": {
+      "post": {
+        "tags": [
+          "Songs"
+        ],
+        "summary": "搜索歌曲",
+        "description": "POST: api/Songs/Search\r\n\r\n允许匿名访问\r\n\r\nJSON形式传输",
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "keywords",
+            "in": "query",
+            "description": "关键词",
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Songs/Top/{size}": {
+      "get": {
+        "tags": [
+          "Songs"
+        ],
+        "summary": "点击量最高的歌曲列表",
+        "description": "GET: api/Songs/Top/5\r\n\r\n允许匿名访问",
+        "operationId": "Top",
+        "parameters": [
+          {
+            "name": "size",
+            "in": "path",
+            "description": "列表长度",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -984,6 +1105,38 @@
         }
       }
     },
+    "/api/Users/Info": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "获取当前用户信息",
+        "description": "GET: api/Users/Info\r\n\r\n需要Token",
+        "operationId": "Info",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Users/Regist": {
       "post": {
         "tags": [
@@ -993,7 +1146,7 @@
         "description": "POST: api/Users/Regist\r\n\r\n允许匿名访问\r\n\r\nJSON形式传参\r\n\r\n可选: securityKey 用于确定注册用户权限\r\n\r\n若成功将响应201并返回用户信息; 若失败返回500(格式错误), 400(邮箱已存在/数据库表为空)",
         "operationId": "Regist",
         "requestBody": {
-          "description": "用户信息, 邮箱和密码必选",
+          "description": "用户信息(邮箱和密码必选)",
           "content": {
             "application/json": {
               "schema": {
@@ -1042,10 +1195,10 @@
           "Users"
         ],
         "summary": "获取Token",
-        "description": "POST: api/Token\r\n\r\nJSON形式传输",
+        "description": "POST: api/Users/Token\r\n\r\nJSON形式传输",
         "operationId": "Token",
         "requestBody": {
-          "description": "用户信息, 邮箱和密码必选",
+          "description": "用户信息(邮箱和密码必选)",
           "content": {
             "application/json": {
               "schema": {
@@ -1076,7 +1229,7 @@
         "tags": [
           "Users"
         ],
-        "summary": "修改用户名",
+        "summary": "修改用户信息",
         "description": "POST: api/Users/UpdateInfo\r\n\r\nJSON形式传输\r\n\r\n若成功响应200并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)",
         "operationId": "UpdateInfo",
         "requestBody": {
@@ -1144,6 +1297,21 @@
           "coverLink": {
             "type": "string",
             "nullable": true
+          },
+          "artistIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "artistNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1161,6 +1329,21 @@
           },
           "description": {
             "type": "string",
+            "nullable": true
+          },
+          "albumIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "albumTitles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "nullable": true
           }
         },
@@ -1219,6 +1402,29 @@
           "albumId": {
             "type": "integer",
             "format": "int64"
+          },
+          "albumTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "coverLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "artistIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "artistNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1261,6 +1467,21 @@
           "profilePhoto": {
             "type": "integer",
             "format": "int32"
+          },
+          "playlistIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "playlistTitles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
