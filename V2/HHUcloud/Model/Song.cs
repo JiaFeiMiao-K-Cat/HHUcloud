@@ -10,6 +10,9 @@ public class Song
     [Key, Comment("歌曲Id")]
     public long SongId { get; set; }
 
+    [Comment("是否可用")]
+    public bool Accessible { get; set; } = true;
+
     [Comment("点击数")]
     public int Count { get; set; }
 
