@@ -37,11 +37,19 @@ public class SongsController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Song>>> GetSong()
     {
-      if (_context.Song == null)
-      {
-          return NotFound();
-      }
-        return await _context.Song.ToListAsync();
+        if (_context.Song == null)
+        {
+            return NotFound();
+        }
+
+        var list = await _context.Song.ToListAsync();
+
+        foreach (var song in list)
+        {
+            await FillSongInfoAsync(song);
+        }
+
+        return list;
     }
 
     /// <summary>
@@ -69,9 +77,7 @@ public class SongsController : ControllerBase
             return NotFound();
         }
 
-        song.CoverLink = (await _context.Album
-            .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
-            .CoverLink;
+        await FillSongInfoAsync(song);
 
         return song;
     }
@@ -99,31 +105,7 @@ public class SongsController : ControllerBase
 
         foreach (Song song in list)
         {
-            song.CoverLink = (await _context.Album?
-                .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
-                .CoverLink;
-
-            song.AlbumTitle = (await _context.Album?
-                .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
-                .Title;
-
-            song.ArtistIds = _context.ArtistHasSong?
-                .Where(e => e.SongId == song.SongId)
-                .Select(e => e.ArtistId)
-                .ToList();
-
-            if (song.ArtistIds != null)
-            {
-                song.ArtistNames = new List<string>();
-                foreach (var artistId in song.ArtistIds)
-                {
-                    song.ArtistNames.Add(
-                        _context.Artist?
-                            .FirstOrDefault(e => e.ArtistId == artistId)?
-                            .Name
-                        );
-                }
-            }
+            await FillSongInfoAsync(song);
         }
 
         return list;
@@ -149,25 +131,72 @@ public class SongsController : ControllerBase
             return BadRequest();
         }
 
-        _context.Entry(song).State = EntityState.Modified;
-
-        try
+        if (!SongExists(id))
         {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!SongExists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            return NotFound();
         }
 
-        return NoContent();
+        _context.ArtistHasSong?
+            .RemoveRange(_context.ArtistHasSong
+                .Where(e => e.SongId == id));
+
+        _context.AlbumHasSong?
+            .RemoveRange(_context.AlbumHasSong
+                .Where(e => e.SongId == id));
+        var album = new AlbumHasSong()
+        {
+            AlbumId = song.AlbumId,
+            SongId = song.SongId,
+        };
+        _context.AlbumHasSong?.Add(album);
+        if (song.ArtistIds != null)
+        {
+            foreach (var artistId in song.ArtistIds)
+            {
+                await _context.ArtistHasSong.AddAsync(new ArtistHasSong()
+                {
+                    ArtistId = artistId,
+                    SongId = song.SongId,
+                });
+            }
+        }
+        _context.Update(song);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction("GetSong", new { id = song.SongId }, song);
+    }
+
+    /// <summary>
+    /// 改变歌曲状态
+    /// </summary>
+    /// <remarks>
+    /// POST: api/Songs/ChangeStatus/5
+    /// 
+    /// 管理员及以上权限
+    /// </remarks>
+    /// <param name="id">歌曲ID</param>
+    /// <returns>歌曲信息</returns>
+    [HttpPost("ChangeStatus/{id}")]
+    [Authorize(Roles = "Root,Administrator")]
+    public async Task<ActionResult<Song>> ChangeStatus(long id)
+    {
+        if (_context.Song == null)
+        {
+            return Problem("Entity set 'Context.Song'  is null.");
+        }
+        if (!SongExists(id))
+        {
+            return NotFound($"Song {id} is not found");
+        }
+        var song = _context.Song.First(e => e.SongId == id);
+
+        song.Accessible = !song.Accessible;
+
+        _context.Song.Update(song);
+
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction("GetSong", new { id = id }, song);
     }
 
     /// <summary>
@@ -237,31 +266,7 @@ public class SongsController : ControllerBase
             .ToList();
         foreach (var item in list)
         {
-            item.CoverLink = (await _context.Album?
-                .FirstOrDefaultAsync(e => e.AlbumId == item.AlbumId))?
-                .CoverLink;
-
-            item.AlbumTitle = (await _context.Album?
-                .FirstOrDefaultAsync(e => e.AlbumId == item.AlbumId))?
-                .Title;
-
-            item.ArtistIds = _context.ArtistHasSong?
-                .Where(e => e.SongId == item.SongId)
-                .Select(e => e.ArtistId)
-                .ToList();
-
-            if (item.ArtistIds != null)
-            {
-                item.ArtistNames = new List<string>();
-                foreach (var artistId in item.ArtistIds)
-                {
-                    item.ArtistNames.Add(
-                        _context.Artist?
-                            .FirstOrDefault(e => e.ArtistId == artistId)?
-                            .Name
-                        );
-                }
-            }
+            await FillSongInfoAsync(item);
         }
         return Ok(list);
     }
@@ -291,9 +296,59 @@ public class SongsController : ControllerBase
         }
 
         _context.Song.Remove(song);
+
+        _context.ArtistHasSong?
+            .RemoveRange(_context.ArtistHasSong
+                .Where(e => e.SongId == id));
+
+        _context.AlbumHasSong?
+            .RemoveRange(_context.AlbumHasSong
+                .Where(e => e.SongId == id));
+
+        _context.PlaylistHasSong?
+            .RemoveRange(_context.PlaylistHasSong
+                .Where(e => e.SongId == id));
+
+        _context.PlayRecord?
+            .RemoveRange(_context.PlayRecord
+                .Where(e => e.SongId == id));
+
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+    private async Task FillSongInfoAsync(Song song)
+    {
+        if (song == null)
+        {
+            return;
+        }
+
+        song.CoverLink = (await _context.Album?
+            .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
+            .CoverLink;
+
+        song.AlbumTitle = (await _context.Album?
+            .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
+            .Title;
+
+        song.ArtistIds = _context.ArtistHasSong?
+            .Where(e => e.SongId == song.SongId)
+            .Select(e => e.ArtistId)
+            .ToList();
+
+        if (song.ArtistIds != null)
+        {
+            song.ArtistNames = new List<string>();
+            foreach (var artistId in song.ArtistIds)
+            {
+                song.ArtistNames.Add(
+                    _context.Artist?
+                        .FirstOrDefault(e => e.ArtistId == artistId)?
+                        .Name
+                    );
+            }
+        }
     }
 
     private bool SongExists(long id)
