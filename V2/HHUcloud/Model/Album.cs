@@ -24,4 +24,7 @@ public class Album
 
     [NotMapped]
     public List<string>? ArtistNames { get; set; }
+
+    [NotMapped]
+    public List<Song>? Songs { get; set; }
 }

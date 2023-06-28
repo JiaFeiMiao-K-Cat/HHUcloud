@@ -25,27 +25,38 @@ public class AlbumsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Album>>> GetAlbum()
     {
-      if (_context.Album == null)
-      {
-          return NotFound();
-      }
-        return await _context.Album.ToListAsync();
+        if (_context.Album == null)
+        {
+            return NotFound();
+        }
+
+        var list = await _context.Album.ToListAsync();
+
+        foreach (var album in list)
+        {
+            await FillAlbumInfoAsync(album);
+        }
+
+        return list;
     }
 
     // GET: api/Albums/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Album>> GetAlbum(long id)
     {
-      if (_context.Album == null)
-      {
-          return NotFound();
-      }
+        if (_context.Album == null)
+        {
+            return NotFound();
+        }
+
         var album = await _context.Album.FindAsync(id);
 
         if (album == null)
         {
             return NotFound();
         }
+
+        await FillAlbumInfoAsync(album);
 
         return album;
     }
@@ -90,17 +101,7 @@ public class AlbumsController : ControllerBase
         {
             return Problem("Entity set 'Context.Album'  is null.");
         }
-        if (album.ArtistIds != null)
-        {
-            foreach(var artistId in album.ArtistIds)
-            {
-                await _context.ArtistHasAlbums.AddAsync(new ArtistHasAlbum()
-                {
-                    AlbumId = album.AlbumId,
-                    ArtistId = artistId
-                });
-            }
-        }
+
         _context.Album.Add(album);
         await _context.SaveChangesAsync();
 
@@ -125,6 +126,34 @@ public class AlbumsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    private async Task FillAlbumInfoAsync(Album album)
+    {
+        if (album == null)
+        {
+            return;
+        }
+
+        album.ArtistIds = await _context.ArtistHasAlbums?
+            .Where(e => e.AlbumId == album.AlbumId)
+            .Select(e => e.ArtistId)
+            .ToListAsync();
+
+        if (album.ArtistIds != null)
+        {
+            album.ArtistNames = new List<string>();
+            foreach (var artist in album.ArtistIds)
+                {
+                    album.ArtistNames.Add(_context.Artist?
+                        .FirstOrDefault(e => e.ArtistId == artist)?
+                        .Name);
+                }
+        }
+
+        album.Songs = await _context.Song
+            .Where(e => e.AlbumId == album.AlbumId)
+            .ToListAsync();
     }
 
     private bool AlbumExists(long id)

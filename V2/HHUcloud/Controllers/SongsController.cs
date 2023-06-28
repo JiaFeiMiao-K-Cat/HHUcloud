@@ -237,6 +237,17 @@ public class SongsController : ControllerBase
                     ArtistId = artistId,
                     SongId = song.SongId,
                 });
+
+                if (!_context.ArtistHasAlbums
+                    .Any(e => e.AlbumId == song.AlbumId
+                        && e.ArtistId == artistId))
+                {
+                    await _context.ArtistHasAlbums.AddAsync(new ArtistHasAlbum()
+                    {
+                        AlbumId = song.AlbumId,
+                        ArtistId = artistId,
+                    });
+                }
             }
         }
         await _context.SaveChangesAsync();
@@ -258,7 +269,7 @@ public class SongsController : ControllerBase
     /// <returns>歌曲列表</returns>
     [HttpPost("Search")]
     [AllowAnonymous]
-    public async Task<ActionResult<List<Song>>> Search(string keywords)
+    public async Task<ActionResult<List<Song>>> Search([FromBody]string keywords)
     {
         var terms = keywords.Split(' ');
         var list = _context.Song.ToList()

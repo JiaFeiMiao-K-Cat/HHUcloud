@@ -49,7 +49,15 @@ public class UsersController : ControllerBase
         {
             return NotFound();
         }
-        return await _context.User.ToListAsync();
+
+        var list = await _context.User.ToListAsync();
+
+        foreach (var user in list)
+        {
+            await FillPlaylistAsync(user);
+        }
+
+        return list;
     }
 
     /// <summary>
@@ -76,20 +84,7 @@ public class UsersController : ControllerBase
             return NotFound();
         }
 
-        user.PlaylistIds = await _context.Playlist
-            .Where(e => e.UserId == user.UserId)
-            .Select(e => e.PlaylistId)
-            .ToListAsync();
-
-        if (user.PlaylistIds != null)
-        {
-            user.PlaylistTitles = new List<string>();
-
-            foreach (var playlist in user.PlaylistIds)
-            {
-                user.PlaylistTitles.Add(_context.Playlist.FirstOrDefault(e => e.PlaylistId == playlist)?.Title);
-            }
-        }
+        await FillPlaylistAsync(user);
 
         return user;
     }
@@ -123,12 +118,73 @@ public class UsersController : ControllerBase
         user.UserPassword = string.Empty; // hide information
         user.SecurityKey = string.Empty; // hide information
 
+        await FillPlaylistAsync(user);
+
         return user;
     }
 
-    // PUT: api/Users/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    /// <summary>
+    /// 找回密码
+    /// </summary>
+    /// <remarks>
+    /// POST: api/Users/FindBackPassword
+    /// 
+    /// 允许匿名访问
+    /// 
+    /// JSON形式传输
+    /// 
+    /// 若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)
+    /// 
+    /// </remarks>
+    [HttpPost("FindBackPassword")]
+    [AllowAnonymous]
+    public async Task<ActionResult<User>> FindBackPassword(User user)
+    {
+        if (_context.User == null)
+        {
+            return Problem("Entity set 'Context.User'  is null.");
+        }
+        string email = user.Email;
+        string newPassword = user.UserPassword;
+        string securityKey = user.SecurityKey;
+        if (!UserExists(email))
+        {
+            return NotFound();
+        }
+        var _user = await _context.User.FirstOrDefaultAsync(e => e.Email == email);
+
+        if (_user.SecurityKey == securityKey)
+        {
+            _user.UserPassword = Sha256Tool.ComputeSHA256Hash(newPassword + _configuration["Jwt:Salt"]);
+            _context.User.Update(_user);
+            await _context.SaveChangesAsync();
+        }
+        else
+        {
+            return Problem("SecurityKey is wrong.");
+        }
+        user = JsonSerializer.Deserialize<User>(JsonSerializer.Serialize(_user)); //Deep Copy
+
+        user.UserPassword = string.Empty; // hide information
+        user.SecurityKey = string.Empty; // hide information
+
+        await FillPlaylistAsync(user);
+
+        return user;
+    }
+
+    /// <summary>
+    /// 更新用户信息
+    /// </summary>
+    /// <remarks>
+    /// PUT: api/Users/5
+    /// 
+    /// 管理员及以上权限
+    /// </remarks>
+    /// <param name="id">用户ID</param>
+    /// <param name="user">用户信息</param>
     [HttpPut("{id}")]
+    [Authorize(Roles = "Root,Administrator")]
     public async Task<IActionResult> PutUser(long id, User user)
     {
         if (id != user.UserId)
@@ -438,6 +494,25 @@ public class UsersController : ControllerBase
             return -1;
         } // Without Token
         return long.Parse(userId.Value);
+    }
+
+    private async Task FillPlaylistAsync(User user)
+    {
+        if (user == null)
+        {
+            return;
+        }
+
+        var playlists = _context.Playlist
+            .Where(e => e.UserId == user.UserId);
+
+        user.PlaylistIds = await playlists
+            .Select(e => e.PlaylistId)
+            .ToListAsync();
+
+        user.PlaylistTitles = await playlists
+            .Select(e => e.Title)
+            .ToListAsync();
     }
     private bool UserExists(long id) => 
         (_context.User?.Any(e => e.UserId == id)).GetValueOrDefault();
