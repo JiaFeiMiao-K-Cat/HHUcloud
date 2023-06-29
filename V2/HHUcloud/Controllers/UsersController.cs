@@ -227,6 +227,7 @@ public class UsersController : ControllerBase
     /// <param name="oldPassword">原始密码</param>
     /// <param name="newPassword">新密码</param>
     [HttpPost("ChangePassword")]
+    [Authorize(Roles = "Root,Administrator,User")]
     public async Task<ActionResult<User>> ChangePassword([FromForm] string oldPassword, [FromForm] string newPassword)
     {
         if (_context.User == null)
@@ -273,6 +274,7 @@ public class UsersController : ControllerBase
     /// </remarks>
     /// <param name="user">用户信息</param>
     [HttpPost("UpdateInfo")]
+    [Authorize(Roles = "Root,Administrator,User,Guest")]
     public async Task<ActionResult<User>> UpdateInfo(User user)
     {
         if (_context.User == null)
@@ -306,6 +308,52 @@ public class UsersController : ControllerBase
         user.SecurityKey = string.Empty; // hide information
 
         return user;
+    }
+    /// <summary>
+    /// 获取用户按时间倒序的播放记录
+    /// </summary>
+    /// <remarks>
+    /// GET: api/Users/RecentPlay
+    /// 
+    /// 返回歌曲列表
+    /// </remarks>
+    /// <param name="size">记录条数, 默认为100</param>
+    /// <returns>最近size条记录, 若记录条数不足, 返回所有记录</returns>
+    [HttpGet("RecentPlay")]
+    [Authorize(Roles = "Root,Administrator,User")]
+    public async Task<ActionResult<List<Song>>> RecentPlay(int size = 100)
+    {
+        if (_context.User == null)
+        {
+            return Problem("Entity set 'Context.User'  is null.");
+        }
+
+        long id = GetUserId();
+
+        User user = await _context.User.FindAsync(id);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var songIds = _context.PlayRecord?.ToList()
+            .Where(e => e.UserId == user.UserId)
+            .OrderByDescending(e => e.Played) // 按时间近->远顺序排列
+            .Select(p => p.SongId)
+            .Take(size)
+            .ToList();
+
+        var songs = new List<Song>();
+
+        foreach (var songId in songIds)
+        {
+            var song = _context.Song.Find(songId);
+            await FillSongInfoAsync(song);
+            songs.Add(song);
+        }
+
+        return songs;
     }
 
     /// <summary>
@@ -387,6 +435,7 @@ public class UsersController : ControllerBase
 
     // DELETE: api/Users/5
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Root,Administrator")]
     public async Task<IActionResult> DeleteUser(long id)
     {
         if (_context.User == null)
@@ -513,6 +562,39 @@ public class UsersController : ControllerBase
         user.PlaylistTitles = await playlists
             .Select(e => e.Title)
             .ToListAsync();
+    }
+    private async Task FillSongInfoAsync(Song song)
+    {
+        if (song == null)
+        {
+            return;
+        }
+
+        song.CoverLink = (await _context.Album?
+            .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
+            .CoverLink;
+
+        song.AlbumTitle = (await _context.Album?
+            .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
+            .Title;
+
+        song.ArtistIds = _context.ArtistHasSong?
+            .Where(e => e.SongId == song.SongId)
+            .Select(e => e.ArtistId)
+            .ToList();
+
+        if (song.ArtistIds != null)
+        {
+            song.ArtistNames = new List<string>();
+            foreach (var artistId in song.ArtistIds)
+            {
+                song.ArtistNames.Add(
+                    _context.Artist?
+                        .FirstOrDefault(e => e.ArtistId == artistId)?
+                        .Name
+                    );
+            }
+        }
     }
     private bool UserExists(long id) => 
         (_context.User?.Any(e => e.UserId == id)).GetValueOrDefault();

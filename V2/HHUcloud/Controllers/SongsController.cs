@@ -79,6 +79,26 @@ public class SongsController : ControllerBase
 
         await FillSongInfoAsync(song);
 
+        long userId = GetUserId();
+        Console.WriteLine($"User({userId}) Play Song({id})");
+        if (_context.User.Any(e => e.UserId == userId))
+        {
+            PlayRecord playRecord = await _context.PlayRecord.FirstOrDefaultAsync(e => e.UserId == userId && e.SongId == id);
+            if (playRecord == null)
+            {
+                playRecord = new PlayRecord();
+                playRecord.UserId = userId;
+                playRecord.SongId = id;
+                _context.PlayRecord.Add(playRecord);
+            }
+            playRecord.Played = DateTime.UtcNow;
+            playRecord.Count++;
+        }
+
+        song.Count++;
+
+        await _context.SaveChangesAsync();
+
         return song;
     }
     
@@ -360,6 +380,20 @@ public class SongsController : ControllerBase
                     );
             }
         }
+    }
+
+    /// <summary>
+    /// copy from: https://stackoverflow.com/questions/50580232/get-userid-from-jwt-on-all-controller-methods
+    /// </summary>
+    /// <returns>当前Token的用户ID</returns>
+    protected long GetUserId()
+    {
+        var userId = this.User.Claims.FirstOrDefault(i => i.Type == "UserId");
+        if (userId == null)
+        {
+            return -1;
+        } // Without Token
+        return long.Parse(userId.Value);
     }
 
     private bool SongExists(long id)

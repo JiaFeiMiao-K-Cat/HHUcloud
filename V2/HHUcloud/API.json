@@ -584,6 +584,128 @@
         }
       }
     },
+    "/api/Playlists/AddSong": {
+      "post": {
+        "tags": [
+          "Playlists"
+        ],
+        "summary": "向歌单添加歌曲",
+        "description": "POST: api/PlayLists/AddSong\r\n\r\nJSON形式传输",
+        "operationId": "AddSong",
+        "requestBody": {
+          "description": "相关信息, 歌单和歌曲ID必选",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaylistHasSong"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaylistHasSong"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaylistHasSong"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Playlists/Create": {
+      "post": {
+        "tags": [
+          "Playlists"
+        ],
+        "summary": "创建歌单",
+        "description": "POST: api/Playlists/Create\r\n\r\nJSON形式传参",
+        "operationId": "CreatePlaylist",
+        "requestBody": {
+          "description": "歌单信息(标题必选)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Playlist"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Playlist"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Playlist"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playlist"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playlist"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playlist"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Playlists/RemoveSong": {
+      "post": {
+        "tags": [
+          "Playlists"
+        ],
+        "summary": "从歌单删除歌曲",
+        "description": "POST: api/Playlists/RemoveSong\r\n\r\nJSON形式传输",
+        "operationId": "RemoveSong",
+        "requestBody": {
+          "description": "相关信息, 歌单和歌曲ID必选",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaylistHasSong"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaylistHasSong"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaylistHasSong"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/Songs": {
       "get": {
         "tags": [
@@ -792,6 +914,51 @@
         }
       }
     },
+    "/api/Songs/ChangeStatus/{id}": {
+      "post": {
+        "tags": [
+          "Songs"
+        ],
+        "summary": "改变歌曲状态",
+        "description": "POST: api/Songs/ChangeStatus/5\r\n\r\n管理员及以上权限",
+        "operationId": "ChangeStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "歌曲ID",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Song"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Song"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Song"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Songs/Search": {
       "post": {
         "tags": [
@@ -800,17 +967,26 @@
         "summary": "搜索歌曲",
         "description": "POST: api/Songs/Search\r\n\r\n允许匿名访问\r\n\r\nJSON形式传输",
         "operationId": "Search",
-        "parameters": [
-          {
-            "name": "keywords",
-            "in": "query",
-            "description": "关键词",
-            "style": "form",
-            "schema": {
-              "type": "string"
+        "requestBody": {
+          "description": "关键词",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "string"
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "Success",
@@ -986,11 +1162,14 @@
         "tags": [
           "Users"
         ],
+        "summary": "更新用户信息",
+        "description": "PUT: api/Users/5\r\n\r\n管理员及以上权限",
         "operationId": "PutUser",
         "parameters": [
           {
             "name": "id",
             "in": "path",
+            "description": "用户ID",
             "required": true,
             "style": "simple",
             "schema": {
@@ -1000,6 +1179,7 @@
           }
         ],
         "requestBody": {
+          "description": "用户信息",
           "content": {
             "application/json": {
               "schema": {
@@ -1077,6 +1257,57 @@
                 "newPassword": {
                   "style": "form"
                 }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/FindBackPassword": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "找回密码",
+        "description": "POST: api/Users/FindBackPassword\r\n\r\n允许匿名访问\r\n\r\nJSON形式传输\r\n\r\n若成功响应201并返回用户信息; 若失败返回500(格式错误), 400(安全代码错误), 404(用户不存在)",
+        "operationId": "FindBackPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
               }
             }
           }
@@ -1312,6 +1543,13 @@
               "type": "string"
             },
             "nullable": true
+          },
+          "songs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Song"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1345,6 +1583,13 @@
               "type": "string"
             },
             "nullable": true
+          },
+          "albumCovers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1367,6 +1612,31 @@
           "userId": {
             "type": "integer",
             "format": "int64"
+          },
+          "songs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Song"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaylistHasSong": {
+        "type": "object",
+        "properties": {
+          "playlistId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "songId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "added": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -1386,6 +1656,9 @@
           "songId": {
             "type": "integer",
             "format": "int64"
+          },
+          "accessible": {
+            "type": "boolean"
           },
           "count": {
             "type": "integer",

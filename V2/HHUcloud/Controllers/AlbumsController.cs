@@ -7,11 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HHUcloud.Data;
 using HHUcloud.Model;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HHUcloud.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class AlbumsController : ControllerBase
 {
     private readonly Context _context;
@@ -64,6 +67,7 @@ public class AlbumsController : ControllerBase
     // PUT: api/Albums/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
+    [Authorize(Roles = "Root,Administrator")]
     public async Task<IActionResult> PutAlbum(long id, Album album)
     {
         if (id != album.AlbumId)
@@ -95,6 +99,7 @@ public class AlbumsController : ControllerBase
     // POST: api/Albums
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
+    [Authorize(Roles = "Root,Administrator")]
     public async Task<ActionResult<Album>> PostAlbum(Album album)
     {
         if (_context.Album == null)
@@ -110,6 +115,7 @@ public class AlbumsController : ControllerBase
 
     // DELETE: api/Albums/5
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Root,Administrator")]
     public async Task<IActionResult> DeleteAlbum(long id)
     {
         if (_context.Album == null)

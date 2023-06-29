@@ -29,11 +29,19 @@ public class PlaylistsController : ControllerBase
     [Authorize(Roles = "Root,Administrator")]
     public async Task<ActionResult<IEnumerable<Playlist>>> GetPlaylist()
     {
-      if (_context.Playlist == null)
-      {
-          return NotFound();
-      }
-        return await _context.Playlist.ToListAsync();
+        if (_context.Playlist == null)
+        {
+            return NotFound();
+        }
+
+        var list = await _context.Playlist.ToListAsync();
+
+        foreach (var item in list)
+        {
+            await FillPlaylistInfoAsync(item);
+        }
+
+        return list;
     }
 
     // GET: api/Playlists/5
@@ -41,10 +49,11 @@ public class PlaylistsController : ControllerBase
     [Authorize(Roles = "Root,Administrator,User,Guest")]
     public async Task<ActionResult<Playlist>> GetPlaylist(long id)
     {
-      if (_context.Playlist == null)
-      {
-          return NotFound();
-      }
+        if (_context.Playlist == null)
+        {
+            return NotFound();
+        }
+
         var playlist = await _context.Playlist.FindAsync(id);
 
         if (playlist == null)
@@ -52,7 +61,7 @@ public class PlaylistsController : ControllerBase
             return NotFound();
         }
 
-        
+        await FillPlaylistInfoAsync(playlist);
 
         return playlist;
     }
@@ -257,6 +266,27 @@ public class PlaylistsController : ControllerBase
     }
 
     private bool PlaylistExists(long id) => (_context.Playlist?.Any(e => e.PlaylistId == id)).GetValueOrDefault();
+
+    private async Task FillPlaylistInfoAsync(Playlist playlist)
+    {
+        if (playlist == null)
+        {
+            return;
+        }
+
+        var songlist = await _context.PlaylistHasSong
+            .Where(e => e.PlaylistId == playlist.PlaylistId)
+            .OrderByDescending(e => e.Added)
+            .Select(e => e.SongId)
+            .ToListAsync();
+
+        playlist.Songs = new List<Song>();
+
+        foreach (var song in songlist)
+        {
+            playlist.Songs.Add(_context.Song.FirstOrDefault(e => e.SongId == song));
+        }
+    }
 
     /// <summary>
     /// copy from: https://stackoverflow.com/questions/50580232/get-userid-from-jwt-on-all-controller-methods

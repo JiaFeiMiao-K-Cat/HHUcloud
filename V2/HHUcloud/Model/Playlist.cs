@@ -18,4 +18,7 @@ public class Playlist
 
     [Comment("用户ID"), ForeignKey(nameof(User.UserId))]
     public long UserId { get; set; }
+
+    [NotMapped]
+    public List<Song>? Songs { get; set; }
 }
