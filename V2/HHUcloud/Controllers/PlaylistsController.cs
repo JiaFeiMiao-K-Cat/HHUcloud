@@ -274,7 +274,7 @@ public class PlaylistsController : ControllerBase
             return;
         }
 
-        var songlist = await _context.PlaylistHasSong
+        var songIds = await _context.PlaylistHasSong
             .Where(e => e.PlaylistId == playlist.PlaylistId)
             .OrderByDescending(e => e.Added)
             .Select(e => e.SongId)
@@ -282,9 +282,45 @@ public class PlaylistsController : ControllerBase
 
         playlist.Songs = new List<Song>();
 
-        foreach (var song in songlist)
+        foreach (var songId in songIds)
         {
-            playlist.Songs.Add(_context.Song.FirstOrDefault(e => e.SongId == song));
+            var song = _context.Song.FirstOrDefault(e => e.SongId == songId);
+            await FillSongInfoAsync(song);
+            playlist.Songs.Add(song);
+        }
+    }
+
+    private async Task FillSongInfoAsync(Song song)
+    {
+        if (song == null)
+        {
+            return;
+        }
+
+        song.CoverLink = (await _context.Album?
+            .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
+            .CoverLink;
+
+        song.AlbumTitle = (await _context.Album?
+            .FirstOrDefaultAsync(e => e.AlbumId == song.AlbumId))?
+            .Title;
+
+        song.ArtistIds = _context.ArtistHasSong?
+            .Where(e => e.SongId == song.SongId)
+            .Select(e => e.ArtistId)
+            .ToList();
+
+        if (song.ArtistIds != null)
+        {
+            song.ArtistNames = new List<string>();
+            foreach (var artistId in song.ArtistIds)
+            {
+                song.ArtistNames.Add(
+                    _context.Artist?
+                        .FirstOrDefault(e => e.ArtistId == artistId)?
+                        .Name
+                    );
+            }
         }
     }
 
